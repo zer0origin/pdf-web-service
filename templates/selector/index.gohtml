@@ -36,11 +36,11 @@
         <div class="d-flex card position-sticky" style="top: 0px;">
             <div class="flex-row d-flex">
                 <div class="d-flex flex-row" style="padding: 0.5em">
-                    <button class="btn btn-primary m-1" onclick="selections()">Enable</button>
+                    <button class="btn btn-primary m-1" onclick="selections(event)">Enable</button>
                     <button class="btn btn-primary m-1">Delete</button>
                 </div>
             </div>
         </div>
-        <img src="images/DHL 31 - Southern Invoice_pages-to-jpg-0002.jpg" style="width: 100%" alt="">
+        <img draggable="false" class="image-page" onmousedown="onClickFunction(event)" src="images/DHL 31 - Southern Invoice_pages-to-jpg-0002.jpg" style="width: 100%" alt="">
     </div>
 {{end}}
