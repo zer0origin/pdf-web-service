@@ -2,15 +2,14 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
+	"pdf_service_web/controller"
 )
 
-type Page struct {
-	Title          string
-	Username       string
-	HasMagicBall   bool
-	HasCapturedRay bool
+type selectorInfo struct {
+	documentUUID string
 }
 
 func main() {
@@ -20,15 +19,24 @@ func main() {
 	router.Static("/images", "static/images")
 	router.Static("/js", "static/js")
 
-	page := Page{
-		Title:          "Selector",
-		Username:       "BeamedCallum",
-		HasMagicBall:   false,
-		HasCapturedRay: true,
-	}
+	loginController := controller.LoginController{}
+	router.GET("/login", loginController.LoginRender)
+	router.POST("/login", loginController.LoginAuthHandler)
 
 	router.GET("/selector", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "selector", page)
+		if id, present := c.GetQuery("documentUUID"); present {
+			_, err := uuid.Parse(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
+				return
+			}
+
+			sel := selectorInfo{documentUUID: id}
+			c.HTML(http.StatusOK, "selector", sel)
+			return
+		}
+
+		c.JSON(http.StatusBadRequest, gin.H{"Error": "No param specified"})
 	})
 
 	log.Fatal(router.Run(":8080"))

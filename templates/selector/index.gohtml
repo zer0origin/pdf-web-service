@@ -24,12 +24,6 @@
     </html>
 {{end}}
 
-{{block "status" . }}
-    Username: {{.Username}} <br>
-    HasMagicBall: {{ if .HasMagicBall }} True {{else}} False {{end}} <br>
-    HasCapturedRay: {{ if .HasCapturedRay }} True {{else}} False {{end}} <br>
-{{end}}
-
 {{block "viewer" . }}
     <script src="js/selections.js"></script>
     <div id="page-1" class="flex-column flex-grow-1 card" style="padding: 0.5em 1em 0.5em 1em">
@@ -41,6 +35,6 @@
                 </div>
             </div>
         </div>
-        <img draggable="false" class="image-page" onmousedown="onClickFunction(event)" src="images/DHL 31 - Southern Invoice_pages-to-jpg-0002.jpg" style="width: 100%" alt="">
+        <img draggable="false" class="image-page border border-black border-1 " onmousedown="onClickFunction(event)" src="images/DHL 31 - Southern Invoice_pages-to-jpg-0002.jpg" style="width: 100%" alt="">
     </div>
 {{end}}
