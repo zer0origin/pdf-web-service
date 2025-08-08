@@ -20,8 +20,12 @@ func main() {
 	router.Static("/js", "static/js")
 
 	loginController := controller.LoginController{}
+	router.GET("/", loginController.LoginRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
+
+	userController := controller.UserController{}
+	router.GET("/user/info", userController.UserInfo)
 
 	router.GET("/selector", func(c *gin.Context) {
 		if id, present := c.GetQuery("documentUUID"); present {
