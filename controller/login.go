@@ -33,7 +33,7 @@ func (LoginController) LoginAuthHandler(c *gin.Context) {
 			return
 		}
 
-		authAttempt, statusCode, err := SendLoginAuthAttempt(username, password)
+		authAttempt, statusCode, err := SendLoginAuthAttemptWithPasswordAndUsername(username, password)
 		if err != nil {
 			return
 		}
@@ -67,7 +67,7 @@ func (LoginController) LoginAuthHandler(c *gin.Context) {
 			return
 		}
 
-		authAttempt, statusCode, err := SendLoginAuthAttempt(loginInfo.Username, loginInfo.Password)
+		authAttempt, statusCode, err := SendLoginAuthAttemptWithPasswordAndUsername(loginInfo.Username, loginInfo.Password)
 		if statusCode != http.StatusOK {
 			fmt.Printf("Returned Server Status Code: \n%d\n", statusCode)
 			c.JSON(statusCode, gin.H{})
@@ -88,7 +88,7 @@ func (LoginController) LoginAuthHandler(c *gin.Context) {
 	c.JSON(http.StatusUnprocessableEntity, gin.H{})
 }
 
-func SendLoginAuthAttempt(username, password string) (string, int, error) {
+func SendLoginAuthAttemptWithPasswordAndUsername(username, password string) (string, int, error) {
 	url := "http://localhost:8081/realms/pdf/protocol/openid-connect/token"
 	method := "POST"
 
