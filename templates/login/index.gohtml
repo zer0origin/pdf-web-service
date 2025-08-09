@@ -13,12 +13,18 @@
     </head>
     <body>
         {{template "navigation" . }}
-        <div class="container my-5 d-flex flex-row">
-            <form>
-                Username: <input type="email" name="username" />
-                Password: <input type="password" name="password" />
-                <button hx-headers='{"Accept": "text/html"}' hx-post="/login">Submit</button>
-            </form>
+        <div class="container my-5 d-flex flex-column d-flex justify-content-center align-items-center">
+            <h1>Login</h1>
+            <div class="d-flex flex-column gap-2">
+                <form class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-column gap-1">
+                        Username: <input type="email" name="username" />
+                        Password: <input type="password" name="password" />
+                    </div>
+                    <button  hx-headers='{"Accept": "text/html"}' hx-post="/login" class="btn btn-sm btn-primary w-100">Login</button>
+                </form>
+                <a href="/register" class="btn btn-sm btn-outline-primary">Register</a>
+            </div>
         </div>
     </body>
     </html>

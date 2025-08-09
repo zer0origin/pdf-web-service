@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
-	"pdf_service_web/model"
+	"pdf_service_web/keycloak"
 )
 
 type UserController struct {
@@ -27,14 +27,14 @@ func (UserController) UserInfo(c *gin.Context) {
 	c.HTML(http.StatusOK, "userinfo", user)
 }
 
-func sendUserInfoRequest(accessToken string) (model.AuthenticatedUser, error) {
+func sendUserInfoRequest(accessToken string) (keycloak.AuthenticatedUser, error) {
 	url := "http://localhost:8081/realms/pdf/protocol/openid-connect/userinfo"
 	method := "GET"
 	authHeaderValue := fmt.Sprintf("Bearer %s", accessToken)
 
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		return model.AuthenticatedUser{}, err
+		return keycloak.AuthenticatedUser{}, err
 	}
 
 	req.Header.Add("Authorization", authHeaderValue)
@@ -42,12 +42,12 @@ func sendUserInfoRequest(accessToken string) (model.AuthenticatedUser, error) {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return model.AuthenticatedUser{}, err
+		return keycloak.AuthenticatedUser{}, err
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
-	user := &model.AuthenticatedUser{}
+	user := &keycloak.AuthenticatedUser{}
 	err = json.Unmarshal(body, user)
 	return *user, err
 }
