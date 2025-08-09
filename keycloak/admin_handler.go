@@ -30,6 +30,18 @@ type NewCredentials struct {
 	Temporary    bool   `json:"temporary"`
 }
 
+func NewAdminHandler(realmConfig RealmConfig) (AdminHandler, error) {
+	ctx, err := getAdminLoginToken(realmConfig)
+	if err != nil {
+		return AdminHandler{}, err
+	}
+
+	return AdminHandler{
+		LoginContext: &ctx,
+		realmConfig:  realmConfig,
+	}, nil
+}
+
 func (t *AdminHandler) Token() (*TokenResponse, error) {
 	loginContext := *t.LoginContext
 	if loginContext == nil || loginContext.Err() != nil || loginContext.Value("JwtToken") == nil {
@@ -47,18 +59,6 @@ func (t *AdminHandler) Token() (*TokenResponse, error) {
 	}
 
 	return response, nil
-}
-
-func NewAdminHandler(realmConfig RealmConfig) (AdminHandler, error) {
-	ctx, err := getAdminLoginToken(realmConfig)
-	if err != nil {
-		return AdminHandler{}, err
-	}
-
-	return AdminHandler{
-		LoginContext: &ctx,
-		realmConfig:  realmConfig,
-	}, nil
 }
 
 func getAdminLoginToken(realmConfig RealmConfig) (context.Context, error) {

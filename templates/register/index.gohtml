@@ -32,10 +32,7 @@
     </body>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            console.log("Content Loaded")
             document.body.addEventListener("htmx:beforeSwap", (event) => {
-                console.log("BEFORE SWAP!")
-                console.log(event)
                 if (event.detail.xhr.status === 422){
                     event.detail.shouldSwap = true;
                     event.detail.isError = false;
