@@ -1,0 +1,52 @@
+services:
+  api:
+    image: pdf_service_api:1.1.0
+    container_name: pdf_service_api
+    environment:
+      DATABASE_USER: user
+      DATABASE_PASSWORD: password
+      DATABASE_PORT: 5432
+      DATABASE_HOST: localhost
+      DATABASE_DB: postgres
+    depends_on:
+      - postgres
+      - keycloak
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ] # Using $$ to escape environment variables
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.2
+    environment:
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8081
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_LOG_LEVEL: info
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health/ready" ]
+      interval: 15s
+      timeout: 2s
+      retries: 15
+    ports:
+      - "8081:8080"
+    command:
+      - start-dev
+      - --import-realm
+      - --verbose
+    volumes:
+      - ./realms:/opt/keycloak/data/import
