@@ -8,7 +8,7 @@ import (
 )
 
 type Middleware struct {
-	Keycloak keycloak.Keycloak
+	Keycloak keycloak.Api
 }
 
 func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, error) {

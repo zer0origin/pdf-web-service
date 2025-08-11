@@ -8,6 +8,8 @@ services:
       DATABASE_PORT: 5432
       DATABASE_HOST: postgres
       DATABASE_DB: postgres
+    ports:
+      - "8082:8080"
     depends_on:
       postgres:
         condition: service_healthy

@@ -33,7 +33,7 @@ type AuthenticatedUser struct {
 	Organization      []string `json:"organization"`
 }
 
-type Keycloak struct {
+type Api struct {
 	RealmHandler
 	AdminHandler
 }
@@ -43,7 +43,7 @@ var IdTokenKey = "idToken"
 var RefreshTokenKey = "refreshToken"
 var InvalidToken = errors.New("token was not provided or invalid")
 
-func (t Keycloak) AuthenticateJwtToken(token string) (jwt.Token, error) {
+func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(t.GetSigningKey()))
 	if err != nil {
 		return jwt.Token{}, err
