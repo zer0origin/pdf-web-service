@@ -5,22 +5,17 @@ import (
 	"log"
 	"pdf_service_web/controller"
 	"pdf_service_web/controller/models"
+	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
 )
 
-type selectorInfo struct {
-	documentUUID string
-}
-
 func main() {
-	router := gin.Default()
-	router.LoadHTMLGlob("templates/**/*.gohtml")
-	router.Static("/css", "static/css")
-	router.Static("/images", "static/images")
-	router.Static("/js", "static/js")
+	handleEmptyJesr := func(str string) { panic("Jesr Api Url must be present.") }
+	mustNotBeEmpty(handleEmptyJesr, models.JESR_API_BASEURL)
+	JesrApi := jesr.Api{BaseUrl: models.JESR_API_BASEURL}
 
-	handleEmpty := func(str string) { panic("Database login credentials must be present.") }
-	mustNotBeEmpty(handleEmpty, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
+	handleEmptyKeycloak := func(str string) { panic("Database login credentials must be present.") }
+	mustNotBeEmpty(handleEmptyKeycloak, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
 	config := keycloak.RealmHandler{
 		BaseUrl:      models.KEYCLOAK_BASEURL,
 		RealmName:    models.KEYCLOAK_REALM_NAME,
@@ -28,12 +23,18 @@ func main() {
 		ClientSecret: models.KEYCLOAK_CLIENT_SECRET,
 	}
 
+	router := gin.Default()
+	router.LoadHTMLGlob("templates/**/*.gohtml")
+	router.Static("/css", "static/css")
+	router.Static("/images", "static/images")
+	router.Static("/js", "static/js")
+
 	adminHandler, err := keycloak.NewAdminHandler(config)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	cloakSetup := keycloak.Keycloak{
+	cloakSetup := keycloak.Api{
 		RealmHandler: config,
 		AdminHandler: adminHandler,
 	}
@@ -51,9 +52,10 @@ func main() {
 	router.POST("/login", loginController.LoginAuthHandler)
 
 	userController := controller.UserController{
-		Keycloak: cloakSetup,
+		KeycloakApi: cloakSetup,
+		JesrApi:     JesrApi,
 	}
-	router.GET("/user/", middleware.RequireAuthenticated, userController.UserInfo)
+	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
 
 	registerController := controller.RegistrationController{

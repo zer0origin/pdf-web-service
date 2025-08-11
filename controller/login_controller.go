@@ -10,7 +10,7 @@ import (
 
 type LoginController struct {
 	AuthenticatedRedirect string
-	Keycloak              keycloak.Keycloak
+	Keycloak              keycloak.Api
 	Middleware            Middleware
 }
 

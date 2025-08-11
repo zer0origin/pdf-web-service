@@ -1,4 +1,4 @@
-{{block "userinfo" . }}
+{{block "userdashboard" . }}
     <!doctype html>
     <html lang="en">
     <head>
@@ -13,19 +13,13 @@
     <body>
     {{template "navigation" . }}
     <div class="container my-5">
-        <h1 class="text-center">JESR EXTRACTION VIEWER!</h1>
-        <h2>Details</h2>
-        <p>Subject: {{.Uid}}</p>
-        <p>Email Verified {{.EmailVerified}}</p>
-        <p>Username: {{.PreferredUsername}}</p>
-        <p>Email: {{.Email}}</p>
-
-        <h3>Organisation</h3>
-        {{ range .Organization }}
-            <div class="d-flex flex-row align-items-center gap-1">
-                <div>{{.}}</div>
-            </div>
-        {{ end }}
+        <h1 class="text-center">User Dashboard</h1>
+        {{if .}}
+            <h2>Documents</h2>
+            {{range .}}
+                <p>{{.Uuid}} | {{.PdfBase64}}</p>
+            {{end}}
+        {{end}}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
