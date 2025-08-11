@@ -21,25 +21,37 @@ func main() {
 	router.Static("/js", "static/js")
 	router.GET("/selector", selector)
 
-	config := keycloak.RealmConfig{
+	config := keycloak.RealmHandler{
 		BaseUrl:      "http://localhost:8081",
 		RealmName:    "pdf",
 		Client:       "service-api",
 		ClientSecret: "gtQLem8EJgxr537nbQlJh3Npd6Li6s0K",
 	}
+	adminHandler, err := keycloak.NewAdminHandler(config)
+	cloakSetup := keycloak.Keycloak{
+		RealmHandler: config,
+		AdminHandler: adminHandler,
+	}
+
+	middleware := controller.Middleware{
+		Keycloak: cloakSetup,
+	}
+
 	loginController := controller.LoginController{
 		AuthenticatedRedirect: "/user/",
-		RealmConfig:           config,
+		Keycloak:              cloakSetup,
 	}
 	router.GET("/", loginController.LoginRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
 
-	userController := controller.UserController{}
-	router.GET("/user/", userController.UserInfo)
-	router.GET("/user/info", userController.UserInfo)
+	userController := controller.UserController{
+		Keycloak: cloakSetup,
+	}
 
-	adminHandler, err := keycloak.NewAdminHandler(config)
+	router.GET("/user/", middleware.Authenticated, userController.UserInfo)
+	router.GET("/user/info", middleware.Authenticated, userController.UserInfo)
+
 	if err != nil {
 		return
 	}

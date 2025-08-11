@@ -1,53 +1,21 @@
 package controller
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"io"
 	"net/http"
 	"pdf_service_web/keycloak"
 )
 
 type UserController struct {
+	Keycloak keycloak.Keycloak
 }
 
-func (UserController) UserInfo(c *gin.Context) {
-	accessTokenCookie, err := c.Request.Cookie("accessToken")
-	if err != nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
-		return
-	}
-
-	user, err := sendUserInfoRequest(accessTokenCookie.Value)
+func (t UserController) UserInfo(c *gin.Context) {
+	accessToken := c.GetString(AccessTokenKey)
+	user, err := t.Keycloak.SendUserInfoRequest(accessToken)
 	if err != nil {
 		return
 	}
 
 	c.HTML(http.StatusOK, "userinfo", user)
-}
-
-func sendUserInfoRequest(accessToken string) (keycloak.AuthenticatedUser, error) {
-	url := "http://localhost:8081/realms/pdf/protocol/openid-connect/userinfo"
-	method := "GET"
-	authHeaderValue := fmt.Sprintf("Bearer %s", accessToken)
-
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return keycloak.AuthenticatedUser{}, err
-	}
-
-	req.Header.Add("Authorization", authHeaderValue)
-
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return keycloak.AuthenticatedUser{}, err
-	}
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	user := &keycloak.AuthenticatedUser{}
-	err = json.Unmarshal(body, user)
-	return *user, err
 }

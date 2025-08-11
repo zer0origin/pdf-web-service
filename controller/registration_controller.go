@@ -11,7 +11,7 @@ import (
 
 type RegistrationController struct {
 	CreatedUserRedirect string
-	RealmConfig         keycloak.RealmConfig
+	RealmConfig         keycloak.RealmHandler
 	AdminHandler        keycloak.AdminHandler
 }
 

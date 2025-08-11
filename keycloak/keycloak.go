@@ -27,3 +27,8 @@ type AuthenticatedUser struct {
 	Email             string   `json:"email"`
 	Organization      []string `json:"organization"`
 }
+
+type Keycloak struct {
+	RealmHandler
+	AdminHandler
+}

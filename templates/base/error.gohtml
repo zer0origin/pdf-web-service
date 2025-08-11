@@ -1,0 +1,13 @@
+{{block "errorMessage" .}}
+    {{if .}}
+        <div id="error-notification" class="border border-danger d-flex justify-content-center align-items-center">
+            <p class="text-danger mb-0">{{.ErrorMessage}}</p>
+        </div>
+
+        <script>
+            setTimeout(() => {
+                document.getElementById("error-notification").remove()
+            }, 5 * 1000)
+        </script>
+    {{end}}
+{{end}}

@@ -9,7 +9,7 @@ import (
 
 type LoginController struct {
 	AuthenticatedRedirect string
-	RealmConfig           keycloak.RealmConfig
+	Keycloak              keycloak.Keycloak
 }
 
 func (t LoginController) LoginRender(c *gin.Context) {
@@ -19,7 +19,7 @@ func (t LoginController) LoginRender(c *gin.Context) {
 			return
 		}
 
-		token, err := t.RealmConfig.SendLoginAuthAttemptWithRefreshToken(refreshTokenCookie.Value)
+		token, err := t.Keycloak.SendLoginAuthAttemptWithRefreshToken(refreshTokenCookie.Value)
 		if err == nil {
 			c.SetCookie("accessToken", token.AccessToken, token.AccessExpiresIn, "/", "", false, false)
 			c.SetCookie("refreshToken", token.RefreshToken, token.RefreshExpiresIn, "/", "", false, false)
@@ -44,7 +44,7 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 			return
 		}
 
-		authUser, err := t.RealmConfig.SendLoginAuthAttemptWithPasswordAndUsername(username, password)
+		authUser, err := t.Keycloak.SendLoginAuthAttemptWithPasswordAndUsername(username, password)
 		if err != nil {
 			errorToSend := models.BasicError{ErrorMessage: "Incorrect username or password"}
 			c.HTML(http.StatusUnauthorized, "errorMessage", errorToSend)
@@ -67,7 +67,7 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 			return
 		}
 
-		authAttempt, err := t.RealmConfig.SendLoginAuthAttemptWithPasswordAndUsername(loginInfo.Username, loginInfo.Password)
+		authAttempt, err := t.Keycloak.SendLoginAuthAttemptWithPasswordAndUsername(loginInfo.Username, loginInfo.Password)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err)
 			return

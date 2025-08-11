@@ -13,7 +13,7 @@ import (
 
 type AdminHandler struct {
 	LoginContext *context.Context
-	realmConfig  RealmConfig
+	realmConfig  RealmHandler
 }
 
 type NewUser struct {
@@ -30,7 +30,7 @@ type NewCredentials struct {
 	Temporary    bool   `json:"temporary"`
 }
 
-func NewAdminHandler(realmConfig RealmConfig) (AdminHandler, error) {
+func NewAdminHandler(realmConfig RealmHandler) (AdminHandler, error) {
 	ctx, err := getAdminLoginToken(realmConfig)
 	if err != nil {
 		return AdminHandler{}, err
@@ -61,7 +61,7 @@ func (t *AdminHandler) Token() (*TokenResponse, error) {
 	return response, nil
 }
 
-func getAdminLoginToken(realmConfig RealmConfig) (context.Context, error) {
+func getAdminLoginToken(realmConfig RealmHandler) (context.Context, error) {
 	url := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", realmConfig.BaseUrl, realmConfig.RealmName)
 	method := "POST"
 	payload := strings.NewReader("grant_type=client_credentials&client_id=" + realmConfig.Client + "&client_secret=" + realmConfig.ClientSecret)
