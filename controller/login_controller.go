@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"pdf_service_web/controller/models"
@@ -10,26 +11,21 @@ import (
 type LoginController struct {
 	AuthenticatedRedirect string
 	Keycloak              keycloak.Keycloak
+	Middleware            Middleware
 }
 
 func (t LoginController) LoginRender(c *gin.Context) {
-	if refreshTokenCookie, err := c.Request.Cookie("refreshToken"); err == nil {
-		if _, err := c.Request.Cookie("accessToken"); err == nil {
-			c.Redirect(http.StatusFound, t.AuthenticatedRedirect)
-			return
-		}
-
-		token, err := t.Keycloak.SendLoginAuthAttemptWithRefreshToken(refreshTokenCookie.Value)
-		if err == nil {
-			c.SetCookie("accessToken", token.AccessToken, token.AccessExpiresIn, "/", "", false, false)
-			c.SetCookie("refreshToken", token.RefreshToken, token.RefreshExpiresIn, "/", "", false, false)
-			c.SetCookie("idToken", token.IdToken, token.RefreshExpiresIn, "/", "", false, false)
-			c.Redirect(http.StatusFound, t.AuthenticatedRedirect)
-			return
-		}
+	redirect := func(accessToken string) {
+		c.Redirect(http.StatusFound, t.AuthenticatedRedirect)
 	}
 
-	c.HTML(http.StatusOK, "login", gin.H{})
+	signin := func() {
+		c.HTML(http.StatusOK, "login", gin.H{})
+	}
+
+	if err := t.Middleware.isAuthenticated(c, signin, redirect); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (t LoginController) LoginAuthHandler(c *gin.Context) {

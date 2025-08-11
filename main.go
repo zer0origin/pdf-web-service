@@ -49,8 +49,8 @@ func main() {
 		Keycloak: cloakSetup,
 	}
 
-	router.GET("/user/", middleware.Authenticated, userController.UserInfo)
-	router.GET("/user/info", middleware.Authenticated, userController.UserInfo)
+	router.GET("/user/", middleware.RequireAuthenticated, userController.UserInfo)
+	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
 
 	if err != nil {
 		return

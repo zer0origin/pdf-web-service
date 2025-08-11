@@ -11,7 +11,7 @@ type UserController struct {
 }
 
 func (t UserController) UserInfo(c *gin.Context) {
-	accessToken := c.GetString(AccessTokenKey)
+	accessToken := c.GetString(keycloak.AccessTokenKey)
 	user, err := t.Keycloak.SendUserInfoRequest(accessToken)
 	if err != nil {
 		return

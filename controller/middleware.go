@@ -1,10 +1,8 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"pdf_service_web/keycloak"
 )
@@ -13,20 +11,15 @@ type Middleware struct {
 	Keycloak keycloak.Keycloak
 }
 
-var AccessTokenKey = "accessToken"
-var IdTokenKey = "idToken"
-var RefreshTokenKey = "refreshToken"
-var InvalidRefreshToken = errors.New("refresh token was not provided or invalid")
-
 func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, error) {
-	refreshToken, err := c.Cookie(RefreshTokenKey)
+	refreshToken, err := c.Cookie(keycloak.RefreshTokenKey)
 	if err != nil {
 		return "", err
 	}
 
 	token, err := t.Keycloak.SendLoginAuthAttemptWithRefreshToken(refreshToken)
 	if err != nil {
-		return "", InvalidRefreshToken
+		return "", keycloak.InvalidToken
 	}
 
 	fmt.Println("Refreshed token")
@@ -37,70 +30,57 @@ func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, err
 	return token.AccessToken, nil
 }
 
-func (t Middleware) Authenticated(c *gin.Context) {
+func (t Middleware) RequireAuthenticated(c *gin.Context) {
 	onFailure := func() {
 		c.SetCookie("accessToken", "", -1, "", "", false, false)
-		c.Redirect(http.StatusTemporaryRedirect, "/")
-	}
-
-	token, err := c.Request.Cookie(AccessTokenKey)
-	if err != nil {
-		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
-		if err != nil {
-			fmt.Printf(err.Error())
-			onFailure()
-			c.Abort()
-		}
-
-		fmt.Println("Request authenticated")
-		c.Set(AccessTokenKey, accessToken)
-		c.Next()
-		return
-	}
-
-	authenticated, err := t.authenticateJwtToken(token.Value)
-	if err != nil {
-		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
-		if err != nil {
-			fmt.Printf(err.Error())
-			onFailure()
-			c.Abort()
-		}
-
-		fmt.Println("Request authenticated")
-		c.Set(AccessTokenKey, accessToken)
-		c.Next()
-		return
-	}
-
-	if !authenticated {
-		onFailure()
+		c.Redirect(http.StatusTemporaryRedirect, "/") //Login page
 		c.Abort()
-		return
 	}
 
-	fmt.Println("Request authenticated")
-	c.Set(AccessTokenKey, token.Value)
-	c.Next()
+	onSucceeded := func(accessToken string) {
+		c.Set(keycloak.AccessTokenKey, accessToken)
+		c.Next()
+	}
+
+	err := t.isAuthenticated(c, onFailure, onSucceeded)
+	if err != nil {
+		onFailure()
+		return
+	}
 }
 
-func (t Middleware) authenticateJwtToken(token string) (bool, error) {
-	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(t.Keycloak.GetSigningKey()))
+func (t Middleware) isAuthenticated(c *gin.Context, onFailure func(), onSucceeded func(accessToken string)) error {
+	destroyCookies := func() {
+		c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)
+		c.SetCookie(keycloak.RefreshTokenKey, "", -1, "", "", false, false)
+	}
+
+	token, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
-		return false, err
+		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
+		if err != nil {
+			onFailure()
+			destroyCookies()
+			return err
+		}
+
+		onSucceeded(accessToken)
+		return nil
 	}
 
-	tempClaim := &jwt.RegisteredClaims{}
-	withClaims, err := jwt.ParseWithClaims(token, tempClaim, func(token *jwt.Token) (any, error) {
-		return pem, nil
-	})
+	_, err = t.Keycloak.AuthenticateJwtToken(token.Value)
 	if err != nil {
-		return false, err
+		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
+		if err != nil {
+			onFailure()
+			destroyCookies()
+			return err
+		}
+
+		onSucceeded(accessToken)
+		return nil
 	}
 
-	if !withClaims.Valid {
-		return false, nil
-	}
-
-	return true, nil
+	onSucceeded(token.Value)
+	return nil
 }

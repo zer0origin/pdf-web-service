@@ -1,5 +1,10 @@
 package keycloak
 
+import (
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
+)
+
 type UnauthenticatedUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -31,4 +36,30 @@ type AuthenticatedUser struct {
 type Keycloak struct {
 	RealmHandler
 	AdminHandler
+}
+
+var AccessTokenKey = "accessToken"
+var IdTokenKey = "idToken"
+var RefreshTokenKey = "refreshToken"
+var InvalidToken = errors.New("token was not provided or invalid")
+
+func (t Keycloak) AuthenticateJwtToken(token string) (jwt.Token, error) {
+	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(t.GetSigningKey()))
+	if err != nil {
+		return jwt.Token{}, err
+	}
+
+	tempClaim := &jwt.RegisteredClaims{}
+	withClaims, err := jwt.ParseWithClaims(token, tempClaim, func(token *jwt.Token) (any, error) {
+		return pem, nil
+	})
+	if err != nil {
+		return jwt.Token{}, err
+	}
+
+	if !withClaims.Valid {
+		return *withClaims, InvalidToken
+	}
+
+	return *withClaims, nil
 }
