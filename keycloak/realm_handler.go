@@ -14,6 +14,7 @@ type RealmHandler struct {
 	RealmName    string
 	Client       string
 	ClientSecret string
+	PublicKey    string
 }
 
 func (t RealmHandler) SendUserInfoRequest(accessToken string) (AuthenticatedUser, error) {
