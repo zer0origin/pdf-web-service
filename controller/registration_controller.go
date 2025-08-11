@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/mail"
+	"pdf_service_web/controller/models"
 	"pdf_service_web/keycloak"
 )
 
@@ -12,10 +13,6 @@ type RegistrationController struct {
 	CreatedUserRedirect string
 	RealmConfig         keycloak.RealmConfig
 	AdminHandler        keycloak.AdminHandler
-}
-
-type BasicError struct {
-	ErrorMessage string
 }
 
 func (t RegistrationController) RegisterHandle(c *gin.Context) {
@@ -26,13 +23,13 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 		password, _ := c.GetPostForm("password")
 
 		if username == "" || password == "" || email == "" {
-			errorToSend := BasicError{ErrorMessage: "Fill in all text boxes!"}
+			errorToSend := models.BasicError{ErrorMessage: "Fill in all text boxes!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		if !validEmail(email) {
-			errorToSend := BasicError{ErrorMessage: "Invalid email address!"}
+			errorToSend := models.BasicError{ErrorMessage: "Invalid email address!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
@@ -42,7 +39,7 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 
 		if err != nil {
 			fmt.Println(err.Error())
-			errorToSend := BasicError{ErrorMessage: err.Error()}
+			errorToSend := models.BasicError{ErrorMessage: err.Error()}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}

@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"pdf_service_web/controller/models"
 	"pdf_service_web/keycloak"
 )
 
@@ -37,14 +38,16 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 		username, userPresent := c.GetPostForm("username")
 		password, passPresent := c.GetPostForm("password")
 
-		if !userPresent || !passPresent {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{})
+		if !userPresent || !passPresent || username == "" || password == "" {
+			errorToSend := models.BasicError{ErrorMessage: "Fill in all text boxes!"}
+			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		authUser, err := t.RealmConfig.SendLoginAuthAttemptWithPasswordAndUsername(username, password)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, err) //TODO RETURN ERROR AS HTML
+			errorToSend := models.BasicError{ErrorMessage: "Incorrect username or password"}
+			c.HTML(http.StatusUnauthorized, "errorMessage", errorToSend)
 			return
 		}
 
