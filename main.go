@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"log"
-	"net/http"
 	"pdf_service_web/controller"
+	"pdf_service_web/controller/models"
 	"pdf_service_web/keycloak"
 )
 
@@ -19,15 +18,21 @@ func main() {
 	router.Static("/css", "static/css")
 	router.Static("/images", "static/images")
 	router.Static("/js", "static/js")
-	router.GET("/selector", selector)
 
+	handleEmpty := func(str string) { panic("Database login credentials must be present.") }
+	mustNotBeEmpty(handleEmpty, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
 	config := keycloak.RealmHandler{
-		BaseUrl:      "http://localhost:8081",
-		RealmName:    "pdf",
-		Client:       "service-api",
-		ClientSecret: "gtQLem8EJgxr537nbQlJh3Npd6Li6s0K",
+		BaseUrl:      models.KEYCLOAK_BASEURL,
+		RealmName:    models.KEYCLOAK_REALM_NAME,
+		Client:       models.KEYCLOAK_CLIENT,
+		ClientSecret: models.KEYCLOAK_CLIENT_SECRET,
 	}
+
 	adminHandler, err := keycloak.NewAdminHandler(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	cloakSetup := keycloak.Keycloak{
 		RealmHandler: config,
 		AdminHandler: adminHandler,
@@ -48,13 +53,9 @@ func main() {
 	userController := controller.UserController{
 		Keycloak: cloakSetup,
 	}
-
 	router.GET("/user/", middleware.RequireAuthenticated, userController.UserInfo)
 	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
 
-	if err != nil {
-		return
-	}
 	registerController := controller.RegistrationController{
 		CreatedUserRedirect: "/",
 		RealmConfig:         config,
@@ -66,18 +67,10 @@ func main() {
 	log.Fatal(router.Run(":8080"))
 }
 
-func selector(c *gin.Context) {
-	if id, present := c.GetQuery("documentUUID"); present {
-		_, err := uuid.Parse(id)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
-			return
+func mustNotBeEmpty(errorHandle func(string), a ...string) {
+	for _, s := range a {
+		if len(s) == 0 {
+			errorHandle(s)
 		}
-
-		sel := selectorInfo{documentUUID: id}
-		c.HTML(http.StatusOK, "selector", sel)
-		return
 	}
-
-	c.JSON(http.StatusBadRequest, gin.H{"Error": "No param specified"})
 }

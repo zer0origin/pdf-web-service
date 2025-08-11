@@ -1,0 +1,8 @@
+package models
+
+import "os"
+
+var KEYCLOAK_BASEURL = os.Getenv("KEYCLOAK_BASEURL")
+var KEYCLOAK_REALM_NAME = os.Getenv("KEYCLOAK_REALM_NAME")
+var KEYCLOAK_CLIENT = os.Getenv("KEYCLOAK_CLIENT")
+var KEYCLOAK_CLIENT_SECRET = os.Getenv("KEYCLOAK_CLIENT_SECRET")
