@@ -13,7 +13,7 @@ import (
 
 type AdminHandler struct {
 	LoginContext *context.Context
-	realmConfig  RealmHandler
+	realmConfig  *RealmHandler
 }
 
 type NewUser struct {
@@ -30,8 +30,8 @@ type NewCredentials struct {
 	Temporary    bool   `json:"temporary"`
 }
 
-func NewAdminHandler(realmConfig RealmHandler) (AdminHandler, error) {
-	ctx, err := getAdminLoginToken(realmConfig)
+func NewAdminHandler(realmConfig *RealmHandler) (AdminHandler, error) {
+	ctx, err := getAdminLoginToken(*realmConfig)
 	if err != nil {
 		return AdminHandler{}, err
 	}
@@ -42,10 +42,10 @@ func NewAdminHandler(realmConfig RealmHandler) (AdminHandler, error) {
 	}, nil
 }
 
-func (t *AdminHandler) Token() (*TokenResponse, error) {
+func (t *AdminHandler) AdminToken() (*TokenResponse, error) {
 	loginContext := *t.LoginContext
 	if loginContext == nil || loginContext.Err() != nil || loginContext.Value("JwtToken") == nil {
-		ctx, err := getAdminLoginToken(t.realmConfig)
+		ctx, err := getAdminLoginToken(*t.realmConfig)
 		if err != nil {
 			return &TokenResponse{}, err
 		}
@@ -134,7 +134,7 @@ func (t *AdminHandler) CreateNewUserWithPassword(username, email, password strin
 	}
 	req.Header.Add("Content-Type", "application/json")
 
-	token, err := t.Token()
+	token, err := t.AdminToken()
 	if err != nil {
 		return err
 	}
@@ -163,6 +163,41 @@ func (t *AdminHandler) CreateNewUserWithPassword(username, email, password strin
 
 	if res.StatusCode != http.StatusCreated {
 		return fmt.Errorf("server encountered an unexpected error %d", res.StatusCode)
+	}
+
+	return nil
+}
+
+func (t Api) LogoutUser(refreshToken string) error {
+	url := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/logout", t.BaseUrl, t.RealmName)
+	method := "POST"
+	payload := strings.NewReader(fmt.Sprintf("token_type_hint=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s", refreshToken, t.Client, t.ClientSecret))
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusNoContent {
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println(string(body))
+		return errors.New("unexpected status code")
 	}
 
 	return nil

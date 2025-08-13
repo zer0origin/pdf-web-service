@@ -10,7 +10,7 @@ import (
 
 type LoginController struct {
 	AuthenticatedRedirect string
-	Keycloak              keycloak.Api
+	Keycloak              *keycloak.Api
 	Middleware            Middleware
 }
 
@@ -23,7 +23,7 @@ func (t LoginController) LoginRender(c *gin.Context) {
 		c.HTML(http.StatusOK, "login", gin.H{})
 	}
 
-	if err := t.Middleware.isAuthenticated(c, signin, redirect); err != nil {
+	if err := t.Middleware.isAuthenticated(c, false, signin, redirect); err != nil {
 		fmt.Println(err)
 	}
 }
@@ -74,4 +74,25 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusUnprocessableEntity, gin.H{})
+}
+
+func (t LoginController) Logout(c *gin.Context) {
+	fmt.Println("Logout handler called")
+	accept := c.Request.Header["Accept"][0]
+	if accept == "text/html" {
+		fmt.Println("Logging out client")
+		refreshToken, err := c.Cookie("refreshToken")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		_ = t.Keycloak.LogoutUser(refreshToken)
+		c.SetCookie("accessToken", "", -1, "/", "", false, false)
+		c.SetCookie("refreshToken", "", -1, "/", "", false, false)
+		c.SetCookie("idToken", "", -1, "/", "", false, false)
+		c.Header("HX-Redirect", "/")
+		c.Status(http.StatusOK)
+		return
+	}
 }

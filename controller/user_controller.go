@@ -10,7 +10,7 @@ import (
 )
 
 type UserController struct {
-	KeycloakApi keycloak.Api
+	KeycloakApi *keycloak.Api
 	JesrApi     jesr.Api
 }
 
@@ -27,7 +27,7 @@ func (t UserController) UserInfo(c *gin.Context) {
 func (t UserController) UserDashboard(c *gin.Context) {
 	token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
-		fmt.Println(fmt.Errorf("failed to authenticate access token in user dashboard%s", err.Error()))
+		fmt.Println(fmt.Errorf("failed to authenticate access token in user dashboard %s", err.Error()))
 		c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)
 		c.SetCookie(keycloak.RefreshTokenKey, "", -1, "", "", false, false)
 		c.Redirect(http.StatusTemporaryRedirect, "/") //Login page

@@ -2,6 +2,7 @@ package keycloak
 
 import (
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -34,7 +35,7 @@ type AuthenticatedUser struct {
 }
 
 type Api struct {
-	RealmHandler
+	*RealmHandler
 	AdminHandler
 }
 
@@ -44,9 +45,14 @@ var RefreshTokenKey = "refreshToken"
 var InvalidToken = errors.New("token was not provided or invalid")
 
 func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
-	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(t.GetSigningKey()))
+	keyStr, err := t.GetSigningKey()
 	if err != nil {
-		return jwt.Token{}, err
+		return jwt.Token{}, fmt.Errorf("failed to get public key from keyclaok server: %s %s", err.Error(), token)
+	}
+
+	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(keyStr))
+	if err != nil {
+		return jwt.Token{}, fmt.Errorf("failed to parse token: %s %s", err.Error(), token)
 	}
 
 	tempClaim := &jwt.RegisteredClaims{}
@@ -54,7 +60,7 @@ func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 		return pem, nil
 	})
 	if err != nil {
-		return jwt.Token{}, err
+		return jwt.Token{}, fmt.Errorf("failed to parse token: %s %s", err.Error(), token)
 	}
 
 	if !withClaims.Valid {

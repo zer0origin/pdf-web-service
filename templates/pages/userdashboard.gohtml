@@ -12,14 +12,31 @@
     </head>
     <body>
     {{template "navigation" . }}
-    <div class="container my-5">
-        <h1 class="text-center">User Dashboard</h1>
-        {{if .}}
-            <h2>Documents</h2>
-            {{range .}}
-                <p>{{.Uuid}} | {{.PdfBase64}}</p>
+    <div class="container my-5 text-center w-100 d-flex flex-column justify-content-center align-items-center align-items-center w-100">
+        <h2>User Dashboard</h2>
+        <hr>
+        <div class="text-start w-50" id="documents">
+            {{if .}}
+                <div class="d-flex align-items-center align-items-center w-100">
+                    <h3 class="m-0 w-100">Documents</h3> <a class="btn btn-sm btn-outline-primary">Upload</a>
+                </div>
+                <div class="d-flex flex-column align-items-center align-items-center w-100">
+                    {{range .}}
+                        <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
+                            <p class="m-0 w-100">{{.DocumentTitle}} | <span id="time-{{.Uuid}}">Time</span></p>
+                            <a class="btn btn-sm btn-secondary">View</a>
+                        </div>
+                        <script>
+                            document.getElementById('time-{{.Uuid}}').textContent = new Date("{{.TimeCreated}}").toUTCString();
+                        </script>
+                    {{end}}
+                </div>
+            {{else}}
+                <div class="d-flex align-items-center align-items-center w-100">
+                    <h3 class="m-0 w-100">No Documents Found</h3> <a class="btn btn-sm btn-outline-primary">Upload</a>
+                </div>
             {{end}}
-        {{end}}
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"

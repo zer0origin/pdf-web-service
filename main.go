@@ -16,7 +16,7 @@ func main() {
 
 	handleEmptyKeycloak := func(str string) { panic("Database login credentials must be present.") }
 	mustNotBeEmpty(handleEmptyKeycloak, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
-	config := keycloak.RealmHandler{
+	config := &keycloak.RealmHandler{
 		BaseUrl:      models.KEYCLOAK_BASEURL,
 		RealmName:    models.KEYCLOAK_REALM_NAME,
 		Client:       models.KEYCLOAK_CLIENT,
@@ -34,7 +34,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	cloakSetup := keycloak.Api{
+	cloakSetup := &keycloak.Api{
 		RealmHandler: config,
 		AdminHandler: adminHandler,
 	}
@@ -46,10 +46,12 @@ func main() {
 	loginController := controller.LoginController{
 		AuthenticatedRedirect: "/user/",
 		Keycloak:              cloakSetup,
+		Middleware:            middleware,
 	}
 	router.GET("/", loginController.LoginRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
+	router.POST("/logout", loginController.Logout)
 
 	userController := controller.UserController{
 		KeycloakApi: cloakSetup,
@@ -60,8 +62,7 @@ func main() {
 
 	registerController := controller.RegistrationController{
 		CreatedUserRedirect: "/",
-		RealmConfig:         config,
-		AdminHandler:        adminHandler,
+		KeycloakApi:         cloakSetup,
 	}
 	router.GET("/register", registerController.RegisterRender)
 	router.POST("/register", registerController.RegisterHandle)

@@ -11,8 +11,7 @@ import (
 
 type RegistrationController struct {
 	CreatedUserRedirect string
-	RealmConfig         keycloak.RealmHandler
-	AdminHandler        keycloak.AdminHandler
+	KeycloakApi         *keycloak.Api
 }
 
 func (t RegistrationController) RegisterHandle(c *gin.Context) {
@@ -35,7 +34,7 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 		}
 
 		fmt.Printf("Registration: %s, %s, %s\n", username, email, password)
-		err := t.AdminHandler.CreateNewUserWithPassword(username, email, password, true, false)
+		err := t.KeycloakApi.CreateNewUserWithPassword(username, email, password, true, false)
 
 		if err != nil {
 			fmt.Println(err.Error())

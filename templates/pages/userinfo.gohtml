@@ -12,13 +12,16 @@
     </head>
     <body>
     {{template "navigation" . }}
-    <div class="container my-5">
-        <h1 class="text-center">User info</h1>
-        <h2>Details</h2>
-        <p>Subject: {{.Uid}}</p>
-        <p>Email Verified {{.EmailVerified}}</p>
-        <p>Username: {{.PreferredUsername}}</p>
-        <p>Email: {{.Email}}</p>
+    <div class="container my-5 text-center w-100 d-flex flex-column justify-content-center align-items-center align-items-center w-100">
+            <h2>User Dashboard</h2>
+            <hr>
+        <div class="text-start w-50">
+            <h2>Details</h2>
+            <p>Subject: {{.Uid}}</p>
+            <p>Email Verified {{.EmailVerified}}</p>
+            <p>Username: {{.PreferredUsername}}</p>
+            <p>Email: {{.Email}}</p>
+        </div>
 
         {{if .Organization}}
         <h3>Organisation</h3>

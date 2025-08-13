@@ -8,7 +8,7 @@ import (
 )
 
 type Middleware struct {
-	Keycloak keycloak.Api
+	Keycloak *keycloak.Api
 }
 
 func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, error) {
@@ -42,17 +42,19 @@ func (t Middleware) RequireAuthenticated(c *gin.Context) {
 		c.Next()
 	}
 
-	err := t.isAuthenticated(c, onFailure, onSucceeded)
+	err := t.isAuthenticated(c, true, onFailure, onSucceeded)
 	if err != nil {
 		onFailure()
 		return
 	}
 }
 
-func (t Middleware) isAuthenticated(c *gin.Context, onFailure func(), onSucceeded func(accessToken string)) error {
-	destroyCookies := func() {
-		c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)
-		c.SetCookie(keycloak.RefreshTokenKey, "", -1, "", "", false, false)
+func (t Middleware) isAuthenticated(c *gin.Context, destroyCookies bool, onFailure func(), onSucceeded func(accessToken string)) error {
+	destroyCookiesFunc := func() {
+		if destroyCookies {
+			c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)
+			c.SetCookie(keycloak.RefreshTokenKey, "", -1, "", "", false, false)
+		}
 	}
 
 	token, err := c.Request.Cookie(keycloak.AccessTokenKey)
@@ -60,7 +62,7 @@ func (t Middleware) isAuthenticated(c *gin.Context, onFailure func(), onSucceede
 		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
 		if err != nil {
 			onFailure()
-			destroyCookies()
+			destroyCookiesFunc()
 			return err
 		}
 
@@ -73,7 +75,7 @@ func (t Middleware) isAuthenticated(c *gin.Context, onFailure func(), onSucceede
 		accessToken, err := t.getAccessTokenUsingRefreshToken(c)
 		if err != nil {
 			onFailure()
-			destroyCookies()
+			destroyCookiesFunc()
 			return err
 		}
 
