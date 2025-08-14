@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"pdf_service_web/controller/models"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
 )
@@ -20,8 +21,11 @@ func (t UserController) UserInfo(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
-	c.HTML(http.StatusOK, "userinfo", user)
+	data := models.PageDefaults{
+		NavDetails:     models.NavDetails{IsAuthenticated: true},
+		ContentDetails: user,
+	}
+	c.HTML(http.StatusOK, "userinfo", data)
 }
 
 func (t UserController) UserDashboard(c *gin.Context) {
@@ -36,5 +40,10 @@ func (t UserController) UserDashboard(c *gin.Context) {
 
 	subject, _ := token.Claims.GetSubject()
 	documentsOwnerByUser, _ := t.JesrApi.GetDocuments(uuid.MustParse(subject))
-	c.HTML(http.StatusOK, "userdashboard", documentsOwnerByUser)
+
+	data := models.PageDefaults{
+		NavDetails:     models.NavDetails{IsAuthenticated: true},
+		ContentDetails: documentsOwnerByUser,
+	}
+	c.HTML(http.StatusOK, "userdashboard", data)
 }

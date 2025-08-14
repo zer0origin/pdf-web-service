@@ -20,7 +20,10 @@ func (t LoginController) LoginRender(c *gin.Context) {
 	}
 
 	signin := func() {
-		c.HTML(http.StatusOK, "login", gin.H{})
+		c.HTML(http.StatusOK, "login", models.PageDefaults{
+			NavDetails:     models.NavDetails{},
+			ContentDetails: gin.H{},
+		})
 	}
 
 	if err := t.Middleware.isAuthenticated(c, false, signin, redirect); err != nil {

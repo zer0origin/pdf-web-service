@@ -11,32 +11,10 @@
               crossorigin="anonymous">
     </head>
     <body>
-    {{template "navigation" . }}
+    {{template "navigation" .NavDetails }}
     <div class="container my-5 text-center w-100 d-flex flex-column justify-content-center align-items-center align-items-center w-100">
-        <h2>User Dashboard</h2>
-        <hr>
-        <div class="text-start w-50" id="documents">
-            {{if .}}
-                <div class="d-flex align-items-center align-items-center w-100">
-                    <h3 class="m-0 w-100">Documents</h3> <a class="btn btn-sm btn-outline-primary">Upload</a>
-                </div>
-                <div class="d-flex flex-column align-items-center align-items-center w-100">
-                    {{range .}}
-                        <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
-                            <p class="m-0 w-100">{{.DocumentTitle}} | <span id="time-{{.Uuid}}">Time</span></p>
-                            <a class="btn btn-sm btn-secondary">View</a>
-                        </div>
-                        <script>
-                            document.getElementById('time-{{.Uuid}}').textContent = new Date("{{.TimeCreated}}").toUTCString();
-                        </script>
-                    {{end}}
-                </div>
-            {{else}}
-                <div class="d-flex align-items-center align-items-center w-100">
-                    <h3 class="m-0 w-100">No Documents Found</h3> <a class="btn btn-sm btn-outline-primary">Upload</a>
-                </div>
-            {{end}}
-        </div>
+        {{template "UserDashboard" .ContentDetails}}
+        {{template "Upload" .ContentDetails}}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
@@ -44,4 +22,47 @@
             crossorigin="anonymous"></script>
     </body>
     </html>
+{{end}}
+
+{{block "UserDashboard" .}}
+    <h2>User Dashboard</h2>
+    <hr>
+    <div class="text-start w-50" id="documents">
+        {{if .}}
+            <div class="d-flex flex-row align-items-center align-items-center w-100">
+                <h3 class="m-0 w-100">Documents</h3> <a onclick="toggleUploadPopup()" class="btn btn-sm btn-outline-primary">Upload</a>
+            </div>
+            <div class="d-flex flex-column align-items-center align-items-center w-100">
+                {{range .}}
+                    <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
+                        <p class="m-0 w-100">{{.DocumentTitle}} | <span id="time-{{.Uuid}}">Time</span></p>
+                        <a class="btn btn-sm btn-secondary">View</a>
+                    </div>
+                    <script>
+                        document.getElementById('time-{{.Uuid}}').textContent = new Date("{{.TimeCreated}}").toUTCString();
+                    </script>
+                {{end}}
+            </div>
+        {{else}}
+            <div class="d-flex align-items-center align-items-center w-100">
+                <h3 class="m-0 w-100">No Documents Found</h3> <a class="btn btn-sm btn-outline-primary" onclick="toggleUploadPopup()">Upload</a>
+            </div>
+        {{end}}
+    </div>
+{{end}}
+
+{{block "Upload" .}}
+    <div id="upload-container" class="flex-column p-2 bg-light align-items-end gap-2 position-absolute w-50" style="top: 180px; right: 25%; display: none">
+        <div class="d-flex w-100">
+            <span class="w-100"></span>
+            <button class="bg-light m-0 p-0 position-absolute border-0" style="width: 25px; height: 25px; right: 0; color: red" onclick="toggleUploadPopup()">x</button>
+        </div>
+        <div id="drop-zone" class="w-100" style="border: 2px dashed #333333; padding-top: 15rem; padding-bottom: 15rem; text-align: center;">
+           <span class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);" id="drop-zone-text"> Drag and drop pdf file here</span>
+        </div>
+        <a class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px" onclick="uploadContents()">Upload files</a>
+        <a class=""></a>
+    </div>
+
+    <script src="/js/upload.js"></script>
 {{end}}

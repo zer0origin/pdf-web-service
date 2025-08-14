@@ -1,4 +1,4 @@
-{{block "navigation" .}}
+{{block "navigation" . }}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
@@ -42,9 +42,9 @@
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
 
-                    <form>
+                    {{if .IsAuthenticated}}
                         <a class="btn btn-outline-success" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
-                    </form>
+                    {{end}}
                 </div>
             </div>
         </div>

@@ -49,7 +49,10 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 }
 
 func (t RegistrationController) RegisterRender(c *gin.Context) {
-	c.HTML(http.StatusOK, "register", gin.H{})
+	c.HTML(http.StatusOK, "register", models.PageDefaults{
+		NavDetails:     models.NavDetails{},
+		ContentDetails: gin.H{},
+	})
 }
 
 func validEmail(email string) bool {
