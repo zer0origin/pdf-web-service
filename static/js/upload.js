@@ -1,17 +1,36 @@
 const dropZone = document.getElementById('drop-zone');
 const dropZoneText = document.getElementById('drop-zone-text');
 const uploadContainer = document.getElementById('upload-container');
-let fileData;
+/** @type {HTMLInputElement} */ const filesListElement = document.getElementById('fileListButton');
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    let a = (event) => {
-        event.preventDefault()
-    }
+setup()
 
-    dropZone.addEventListener(eventName, a)
-});
+function setup() {
+    filesListElement.addEventListener("input", () => {
+        console.log("INPUT UPDATED")
+        updateText()
+    })
 
-dropZone.addEventListener('drop', handleDrop, false);
+    document.getElementById('customUploadButton').addEventListener('click', function () {
+        if (!filesListElement.files[0]) {
+            filesListElement.click();
+        }
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        let a = (event) => {
+            event.preventDefault()
+        }
+
+        if (eventName === "drop") {
+            dropZone.addEventListener(eventName, handleDrop, false);
+        }
+
+        dropZone.addEventListener(eventName, a)
+    });
+
+    reset()
+}
 
 /**
  *
@@ -19,16 +38,21 @@ dropZone.addEventListener('drop', handleDrop, false);
  */
 function handleDrop(e) {
     const files = e.dataTransfer.files;
-    fileData = files[0]
-    handleFiles(fileData);
+    const file = files[0]
+
+    if (file.type !== "application/pdf") {
+        return
+    }
+
+    filesListElement.files = e.dataTransfer.files
+    console.log(filesListElement.files)
+    updateText()
 }
 
-/**
- *
- * @param file {File}
- */
-function handleFiles(file) {
-    if (file.type !== "application/pdf"){
+function updateText() {
+    const file = filesListElement.files[0]
+
+    if (!file) {
         return
     }
 
@@ -46,6 +70,11 @@ function toggleUploadPopup() {
 }
 
 async function uploadContents() {
+    let fileData = filesListElement.files[0]
+    if (!fileData) {
+        return
+    }
+
     let dataToSend = await toBase64(fileData);
     console.log(dataToSend)
     sendData(dataToSend)
@@ -66,7 +95,7 @@ function toBase64(file) {
 }
 
 function reset() {
-    fileData = null;
+    filesListElement.value = ""
     dropZoneText.textContent = "Drag and drop pdf file here"
 }
 
@@ -74,6 +103,6 @@ function reset() {
  *
  * @param data {string}
  */
-function sendData(data){
+function sendData(data) {
 
 }

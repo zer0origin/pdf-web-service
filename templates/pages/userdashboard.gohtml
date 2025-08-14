@@ -60,8 +60,10 @@
         <div id="drop-zone" class="w-100" style="border: 2px dashed #333333; padding-top: 15rem; padding-bottom: 15rem; text-align: center;">
            <span class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);" id="drop-zone-text"> Drag and drop pdf file here</span>
         </div>
-        <a class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px" onclick="uploadContents()">Upload files</a>
+        <a id="customUploadButton" class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px" onclick="uploadContents()">Upload files</a>
         <a class=""></a>
+
+        <input id="fileListButton" type="file" class="d-none">
     </div>
 
     <script src="/js/upload.js"></script>
