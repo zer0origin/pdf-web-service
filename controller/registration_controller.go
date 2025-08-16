@@ -16,7 +16,7 @@ type RegistrationController struct {
 
 func (t RegistrationController) RegisterHandle(c *gin.Context) {
 	accept := c.Request.Header["Accept"][0]
-	if accept == "text/html" {
+	if accept == "text/html" || accept == "*/*" {
 		username, _ := c.GetPostForm("username")
 		email, _ := c.GetPostForm("email")
 		password, _ := c.GetPostForm("password")
@@ -45,7 +45,10 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 
 		c.Header("HX-Redirect", t.CreatedUserRedirect)
 		c.Status(http.StatusOK)
+		return
 	}
+
+	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }
 
 func (t RegistrationController) RegisterRender(c *gin.Context) {

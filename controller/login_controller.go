@@ -76,7 +76,7 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusUnprocessableEntity, gin.H{})
+	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }
 
 func (t LoginController) Logout(c *gin.Context) {

@@ -59,6 +59,7 @@ func main() {
 	}
 	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
+	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
 
 	registerController := controller.RegistrationController{
 		CreatedUserRedirect: "/",

@@ -45,7 +45,6 @@ function handleDrop(e) {
     }
 
     filesListElement.files = e.dataTransfer.files
-    console.log(filesListElement.files)
     updateText()
 }
 
@@ -61,12 +60,20 @@ function updateText() {
 
 function toggleUploadPopup() {
     if (uploadContainer.style.display === "none") {
-        uploadContainer.style.display = "flex"
+        show()
         return
     }
 
-    uploadContainer.style.display = "none"
+    hide()
     reset()
+}
+
+function hide(){
+    uploadContainer.style.display = "none"
+}
+
+function show(){
+    uploadContainer.style.display = "flex"
 }
 
 async function uploadContents() {
@@ -97,6 +104,7 @@ function toBase64(file) {
 function reset() {
     filesListElement.value = ""
     dropZoneText.textContent = "Drag and drop pdf file here"
+    hide()
 }
 
 /**
@@ -104,5 +112,21 @@ function reset() {
  * @param data {string}
  */
 function sendData(data) {
+    console.log("Sending data to the server")
 
+    fetch("/user/upload", {
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        },
+        method: "POST",
+        body: JSON.stringify({
+            documentBase64String: data,
+            ownerType: 1,
+        })
+    }).then(r => {
+        if (r.status !== 201){
+            console.error("Server responded with an unexpected status code.")
+        }
+
+    });
 }

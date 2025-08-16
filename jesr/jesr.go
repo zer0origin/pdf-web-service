@@ -2,10 +2,12 @@ package jesr
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type Api struct {
@@ -38,4 +40,39 @@ func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
 	response := &GetDocumentsResponse{}
 	err = json.Unmarshal(body, response)
 	return response.Documents, err
+}
+
+type UploadRequest struct {
+	DocumentBase64String string    `json:"documentBase64String"`
+	OwnerType            int       `json:"ownerType"`
+	OwnerUUID            uuid.UUID `json:"ownerUUID"`
+}
+
+func (t Api) UploadDocument(request UploadRequest) error {
+	url := fmt.Sprintf("%s/api/v1/documents/", t.BaseUrl)
+	method := "POST"
+
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+
+	body := string(bytes)
+
+	req, err := http.NewRequest(method, url, strings.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New("unexpected status code")
+	}
+
+	return nil
 }
