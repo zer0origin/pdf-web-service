@@ -4,7 +4,29 @@ const uploadContainer = document.getElementById('upload-container');
 /** @type {HTMLInputElement} */ const filesListElement = document.getElementById('fileListButton');
 let tempData = ""
 
-// setup()
+setup()
+
+function setup() {
+    document.getElementById('customUploadButton').addEventListener('click', function () {
+        if (!filesListElement.files[0]) {
+            filesListElement.click();
+        }
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        let a = (event) => {
+            event.preventDefault()
+        }
+
+        if (eventName === "drop") {
+            dropZone.addEventListener(eventName, handleDrop, false);
+        }
+
+        dropZone.addEventListener(eventName, a)
+    });
+
+    reset()
+}
 
 function isFileSelected() {
     return filesListElement.files[0] !== undefined
@@ -14,6 +36,7 @@ function openFileBrowser() {
     filesListElement.click();
 }
 
+//USED BY HTMX
 function shouldSendRequest(event) {
     if (!isFileSelected()) {
         openFileBrowser();
@@ -21,21 +44,23 @@ function shouldSendRequest(event) {
     }
 }
 
+//USED BY HTMX
 function htmxUploadContents(event) {
     let fileData = filesListElement.files[0];
     if (!fileData) {
         return;
     }
 
-    if (fileData.type !== "application/pdf"){
+    if (fileData.type !== "application/pdf"){ //TODO: WARNING EITHER CLIENT SIZE OR JS SIDE.
         reset()
     }
 
     event.detail.formData.append("documentBase64String", tempData);
-    event.detail.formData.append("documentTitle", fileData.name);
+    event.detail.formData.append("documentTitle", fileData.name.slice(0,fileData.name.length-4));
     event.detail.formData.append("ownerType", "1");
 }
 
+//USED BY HTMX
 async function htmxConfirmEvent(event) {
     console.log(event);
 
@@ -57,33 +82,6 @@ async function htmxConfirmEvent(event) {
     } catch (error) {
         console.error("Error preparing file for upload:", error);
     }
-}
-
-function setup() {
-    filesListElement.addEventListener("input", () => {
-        console.log("INPUT UPDATED")
-        updateText()
-    })
-
-    document.getElementById('customUploadButton').addEventListener('click', function () {
-        if (!filesListElement.files[0]) {
-            filesListElement.click();
-        }
-    });
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        let a = (event) => {
-            event.preventDefault()
-        }
-
-        if (eventName === "drop") {
-            dropZone.addEventListener(eventName, handleDrop, false);
-        }
-
-        dropZone.addEventListener(eventName, a)
-    });
-
-    reset()
 }
 
 /**
@@ -130,11 +128,6 @@ function show() {
     uploadContainer.style.display = "flex"
 }
 
-/**
- *
- * @param file {File}
- * @returns Promise<string>
- */
 function toBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();

@@ -35,11 +35,14 @@
             <div class="d-flex flex-column align-items-center align-items-center w-100">
                 {{range .}}
                     <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
-                        <p class="m-0 w-100">{{.DocumentTitle}} | <span id="time-{{.Uuid}}">Time</span></p>
+                        <p class="m-0 w-100">{{.DocumentTitle}}
+                        </p>
                         <a class="btn btn-sm btn-secondary">View</a>
+                        <a class="btn btn-sm btn-danger">Delete</a>
+                        <hr>
                     </div>
                     <script>
-                        document.getElementById('time-{{.Uuid}}').textContent = new Date("{{.TimeCreated}}").toUTCString();
+                        {{/*document.getElementById('time-{{.Uuid}}').textContent = new Date("{{.TimeCreated}}").toUTCString();*/}}
                     </script>
                 {{end}}
             </div>
