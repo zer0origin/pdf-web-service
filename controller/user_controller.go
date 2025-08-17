@@ -9,6 +9,7 @@ import (
 	"pdf_service_web/controller/models"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+	"strconv"
 )
 
 type UserController struct {
@@ -20,6 +21,7 @@ func (t UserController) UserInfo(c *gin.Context) {
 	accessToken := c.GetString(keycloak.AccessTokenKey)
 	user, err := t.KeycloakApi.SendUserInfoRequest(accessToken)
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	data := models.PageDefaults{
@@ -50,42 +52,63 @@ func (t UserController) UserDashboard(c *gin.Context) {
 }
 
 func (t UserController) Upload(c *gin.Context) {
-	accept := c.Request.Header["Accept"][0]
-	if accept == "application/json" || accept == "*/*" {
-		data := &jesr.UploadRequest{}
+	accept := c.Request.Header["Content-Type"][0]
+	if accept == "application/x-www-form-urlencoded" {
+		baseString, baseStringPresent := c.GetPostForm("documentBase64String")
+		documentTile, documentTilePresent := c.GetPostForm("documentTitle")
+		ownerTypeString, ownerTypeStringPresent := c.GetPostForm("ownerType")
 
-		err := c.ShouldBindJSON(data)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, err)
+		if !baseStringPresent || !documentTilePresent || !ownerTypeStringPresent {
+			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("missing required form values")})
 			return
+		}
+
+		ownerType, err := strconv.Atoi(ownerTypeString)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+
+		data := jesr.UploadRequest{
+			DocumentBase64String: baseString,
+			OwnerType:            ownerType,
+			DocumentTitle:        documentTile,
 		}
 
 		token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		subject, err := token.Claims.GetSubject()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		if data.OwnerType != 1 {
-			c.JSON(http.StatusUnprocessableEntity, errors.New("owner type unsupported"))
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errors.New("owner type unsupported")})
 			return
 		}
 
 		data.OwnerUUID = uuid.MustParse(subject)
-		err = t.JesrApi.UploadDocument(*data)
+		err = t.JesrApi.UploadDocument(data)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
+		documentsOwnerByUser, err := t.JesrApi.GetDocuments(uuid.MustParse(subject))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.HTML(http.StatusOK, "userdata", documentsOwnerByUser)
 		c.Status(http.StatusCreated)
 		return
 	}
+
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }

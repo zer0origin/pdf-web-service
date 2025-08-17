@@ -35,8 +35,6 @@ func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
-	fmt.Println(string(body))
-
 	response := &GetDocumentsResponse{}
 	err = json.Unmarshal(body, response)
 	return response.Documents, err
@@ -44,6 +42,7 @@ func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
 
 type UploadRequest struct {
 	DocumentBase64String string    `json:"documentBase64String"`
+	DocumentTitle        string    `json:"documentTitle"`
 	OwnerType            int       `json:"ownerType"`
 	OwnerUUID            uuid.UUID `json:"ownerUUID"`
 }

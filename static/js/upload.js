@@ -2,8 +2,62 @@ const dropZone = document.getElementById('drop-zone');
 const dropZoneText = document.getElementById('drop-zone-text');
 const uploadContainer = document.getElementById('upload-container');
 /** @type {HTMLInputElement} */ const filesListElement = document.getElementById('fileListButton');
+let tempData = ""
 
-setup()
+// setup()
+
+function isFileSelected() {
+    return filesListElement.files[0] !== undefined
+}
+
+function openFileBrowser() {
+    filesListElement.click();
+}
+
+function shouldSendRequest(event) {
+    if (!isFileSelected()) {
+        openFileBrowser();
+        event.preventDefault()
+    }
+}
+
+function htmxUploadContents(event) {
+    let fileData = filesListElement.files[0];
+    if (!fileData) {
+        return;
+    }
+
+    if (fileData.type !== "application/pdf"){
+        reset()
+    }
+
+    event.detail.formData.append("documentBase64String", tempData);
+    event.detail.formData.append("documentTitle", fileData.name);
+    event.detail.formData.append("ownerType", "1");
+}
+
+async function htmxConfirmEvent(event) {
+    console.log(event);
+
+    let fileData = filesListElement.files[0];
+    if (!fileData) {
+        return;
+    }
+
+    if (fileData.type !== "application/pdf"){
+        reset()
+    }
+
+    // Prevent the request from being issued immediately
+    event.preventDefault();
+
+    try {
+        tempData = await toBase64(fileData)
+        event.detail.issueRequest();
+    } catch (error) {
+        console.error("Error preparing file for upload:", error);
+    }
+}
 
 function setup() {
     filesListElement.addEventListener("input", () => {
@@ -68,29 +122,18 @@ function toggleUploadPopup() {
     reset()
 }
 
-function hide(){
+function hide() {
     uploadContainer.style.display = "none"
 }
 
-function show(){
+function show() {
     uploadContainer.style.display = "flex"
-}
-
-async function uploadContents() {
-    let fileData = filesListElement.files[0]
-    if (!fileData) {
-        return
-    }
-
-    let dataToSend = await toBase64(fileData);
-    console.log(dataToSend)
-    sendData(dataToSend)
-    reset()
 }
 
 /**
  *
  * @param file {File}
+ * @returns Promise<string>
  */
 function toBase64(file) {
     return new Promise((resolve, reject) => {
@@ -105,28 +148,4 @@ function reset() {
     filesListElement.value = ""
     dropZoneText.textContent = "Drag and drop pdf file here"
     hide()
-}
-
-/**
- *
- * @param data {string}
- */
-function sendData(data) {
-    console.log("Sending data to the server")
-
-    fetch("/user/upload", {
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        },
-        method: "POST",
-        body: JSON.stringify({
-            documentBase64String: data,
-            ownerType: 1,
-        })
-    }).then(r => {
-        if (r.status !== 201){
-            console.error("Server responded with an unexpected status code.")
-        }
-
-    });
 }

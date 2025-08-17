@@ -1,6 +1,6 @@
 services:
   api:
-    image: pdf_service_api:1.1.6
+    image: pdf_service_api:1.1.7
     container_name: pdf_service_api
     environment:
       DATABASE_USER: user
