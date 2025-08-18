@@ -1,10 +1,15 @@
 package models
 
 type PageDefaults struct {
-	NavDetails     NavDetails
-	ContentDetails any
+	NavDetails           NavDetails
+	NotificationSettings *NotificationSettings
+	ContentDetails       any
 }
 
 type NavDetails struct {
 	IsAuthenticated bool
+}
+
+type NotificationSettings struct {
+	Uid string
 }

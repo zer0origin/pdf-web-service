@@ -48,6 +48,7 @@ func main() {
 		Keycloak:              cloakSetup,
 		Middleware:            middleware,
 	}
+
 	router.GET("/", loginController.LoginRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
@@ -60,6 +61,8 @@ func main() {
 	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
 	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
+	router.GET("/user/:uid/events", userController.PushNotifications)
+	router.GET("/user/events/broadcast", userController.BroadcastNotification)
 
 	registerController := controller.RegistrationController{
 		CreatedUserRedirect: "/",

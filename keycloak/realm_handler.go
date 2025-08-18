@@ -17,6 +17,8 @@ type RealmHandler struct {
 	PublicKey    string
 }
 
+// SendUserInfoRequest
+// Send a request to the API server, grab the users details from the response and parse the data to keycloak.AuthenticatedUser
 func (t *RealmHandler) SendUserInfoRequest(accessToken string) (AuthenticatedUser, error) {
 	url := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/userinfo", t.BaseUrl, t.RealmName)
 	method := "GET"

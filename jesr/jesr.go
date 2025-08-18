@@ -19,7 +19,7 @@ type GetDocumentsResponse struct {
 }
 
 func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
-	url := fmt.Sprintf("%s/api/v1/documents?ownerUUID=%s", t.BaseUrl, uid.String())
+	url := fmt.Sprintf("%s/api/v1/documents?exclude=pdfBase64&ownerUUID=%s", t.BaseUrl, uid.String())
 	method := "GET"
 
 	req, err := http.NewRequest(method, url, nil)
