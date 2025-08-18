@@ -1,7 +1,7 @@
 package models
 
 type PageDefaults struct {
-	NavDetails           NavDetails
+	NavDetails           *NavDetails
 	NotificationSettings *NotificationSettings
 	ContentDetails       any
 }

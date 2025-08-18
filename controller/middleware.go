@@ -7,11 +7,11 @@ import (
 	"pdf_service_web/keycloak"
 )
 
-type Middleware struct {
+type GinMiddleware struct {
 	Keycloak *keycloak.Api
 }
 
-func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, error) {
+func (t GinMiddleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, error) {
 	refreshToken, err := c.Cookie(keycloak.RefreshTokenKey)
 	if err != nil {
 		return "", err
@@ -30,7 +30,7 @@ func (t Middleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, err
 	return token.AccessToken, nil
 }
 
-func (t Middleware) RequireAuthenticated(c *gin.Context) {
+func (t GinMiddleware) RequireAuthenticated(c *gin.Context) {
 	onFailure := func() {
 		c.SetCookie("accessToken", "", -1, "", "", false, false)
 		c.Redirect(http.StatusTemporaryRedirect, "/") //Login page
@@ -42,14 +42,14 @@ func (t Middleware) RequireAuthenticated(c *gin.Context) {
 		c.Next()
 	}
 
-	err := t.isAuthenticated(c, true, onFailure, onSucceeded)
+	err := t.IsAuthenticated(c, true, onFailure, onSucceeded)
 	if err != nil {
 		onFailure()
 		return
 	}
 }
 
-func (t Middleware) isAuthenticated(c *gin.Context, destroyCookies bool, onFailure func(), onSucceeded func(accessToken string)) error {
+func (t GinMiddleware) IsAuthenticated(c *gin.Context, destroyCookies bool, onFailure func(), onSucceeded func(accessToken string)) error {
 	destroyCookiesFunc := func() {
 		if destroyCookies {
 			c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)

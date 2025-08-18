@@ -1,7 +1,7 @@
 {{block "navigation" . }}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">JESR</a>
+            <a class="navbar-brand" hx-trigger="click" hx-swap="none" hx-headers='{"Accept": "text/html"}' hx-get="/user/">JESR</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -14,7 +14,10 @@
 {{/*                        <a aria-current="page" href="/user/">Home</a>*/}}
 {{/*                    </li>*/}}
                     <li class="nav-item">
-                        <a class="nav-link" href="/user/info">User info</a>
+                        <a class="nav-link" hx-trigger="click" hx-swap="none" hx-headers='{"Accept": "text/html"}' hx-get="/user/dashboard">User Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" hx-trigger="click" hx-swap="none" hx-headers='{"Accept": "text/html"}' hx-get="/user/details">User info</a>
                     </li>
 {{/*                    <li class="nav-item dropdown">*/}}
 {{/*                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"*/}}
@@ -41,8 +44,10 @@
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
 
-                    {{if .IsAuthenticated}}
-                        <a class="btn btn-outline-success" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
+                    {{if .}}
+                        {{if .IsAuthenticated}}
+                            <a class="btn btn-outline-success" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
+                        {{end}}
                     {{end}}
                 </div>
             </div>

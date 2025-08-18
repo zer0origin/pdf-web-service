@@ -1,15 +1,14 @@
-const dropZone = document.getElementById('drop-zone');
-const dropZoneText = document.getElementById('drop-zone-text');
-const uploadContainer = document.getElementById('upload-container');
-/** @type {HTMLInputElement} */ const filesListElement = document.getElementById('fileListButton');
-let tempData = ""
+window.dropZone = document.getElementById('drop-zone');
+window.dropZoneText = document.getElementById('drop-zone-text');
+window.uploadContainer = document.getElementById('upload-container');
+window.filesListElement = document.getElementById('fileListButton');
 
 setup()
 
 function setup() {
     document.getElementById('customUploadButton').addEventListener('click', function () {
-        if (!filesListElement.files[0]) {
-            filesListElement.click();
+        if (!window.filesListElement.files[0]) {
+            window.filesListElement.click();
         }
     });
 
@@ -19,21 +18,21 @@ function setup() {
         }
 
         if (eventName === "drop") {
-            dropZone.addEventListener(eventName, handleDrop, false);
+            window.dropZone.addEventListener(eventName, handleDrop, false);
         }
 
-        dropZone.addEventListener(eventName, a)
+        window.dropZone.addEventListener(eventName, a)
     });
 
     reset()
 }
 
 function isFileSelected() {
-    return filesListElement.files[0] !== undefined
+    return window.filesListElement.files[0] !== undefined
 }
 
 function openFileBrowser() {
-    filesListElement.click();
+    window.filesListElement.click();
 }
 
 //USED BY HTMX
@@ -46,7 +45,7 @@ function shouldSendRequest(event) {
 
 //USED BY HTMX
 function htmxUploadContents(event) {
-    let fileData = filesListElement.files[0];
+    let fileData = window.filesListElement.files[0];
     if (!fileData) {
         return;
     }
@@ -55,7 +54,7 @@ function htmxUploadContents(event) {
         reset()
     }
 
-    event.detail.formData.append("documentBase64String", tempData);
+    event.detail.formData.append("documentBase64String", window.tempData);
     event.detail.formData.append("documentTitle", fileData.name.slice(0,fileData.name.length-4));
     event.detail.formData.append("ownerType", "1");
 }
@@ -64,7 +63,7 @@ function htmxUploadContents(event) {
 async function htmxConfirmEvent(event) {
     console.log(event);
 
-    let fileData = filesListElement.files[0];
+    let fileData = window.filesListElement.files[0];
     if (!fileData) {
         return;
     }
@@ -77,7 +76,7 @@ async function htmxConfirmEvent(event) {
     event.preventDefault();
 
     try {
-        tempData = await toBase64(fileData)
+        window.tempData = await toBase64(fileData)
         event.detail.issueRequest();
     } catch (error) {
         console.error("Error preparing file for upload:", error);
@@ -96,22 +95,22 @@ function handleDrop(e) {
         return
     }
 
-    filesListElement.files = e.dataTransfer.files
+    window.filesListElement.files = e.dataTransfer.files
     updateText()
 }
 
 function updateText() {
-    const file = filesListElement.files[0]
+    const file = window.filesListElement.files[0]
 
     if (!file) {
         return
     }
 
-    dropZoneText.textContent = `${file.name}`;
+    window.dropZoneText.textContent = `${file.name}`;
 }
 
 function toggleUploadPopup() {
-    if (uploadContainer.style.display === "none") {
+    if (window.uploadContainer.style.display === "none") {
         show()
         return
     }
@@ -121,11 +120,11 @@ function toggleUploadPopup() {
 }
 
 function hide() {
-    uploadContainer.style.display = "none"
+    window.uploadContainer.style.display = "none"
 }
 
 function show() {
-    uploadContainer.style.display = "flex"
+    window.uploadContainer.style.display = "flex"
 }
 
 function toBase64(file) {
@@ -138,7 +137,7 @@ function toBase64(file) {
 }
 
 function reset() {
-    filesListElement.value = ""
-    dropZoneText.textContent = "Drag and drop pdf file here"
+    window.filesListElement.value = ""
+    window.dropZoneText.textContent = "Drag and drop pdf file here"
     hide()
 }

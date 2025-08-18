@@ -7,28 +7,31 @@ import (
 )
 
 type NotificationService interface {
-	CreateNotificationChannel(uid string) chan string
+	CreateNotificationChannel(uid string) *NotificationChannel
 	DeleteNotificationChannel(uid string) bool
-	GetNotificationChannel(uid string) (chan string, error)
+	GetNotificationChannel(uid string) (*NotificationChannel, error)
 	Broadcast(msg string)
 }
 
 type NotificationDispatcher struct {
-	UserNotifications map[string]chan string
+	UserNotifications map[string]*NotificationChannel
 	UserLock          sync.Mutex
 }
 
-var singleInstance NotificationService
+type NotificationChannel struct {
+	Channel          chan string
+	ConnectedClients int
+}
 
 var lock = &sync.Mutex{}
+var singleInstance NotificationService
 
 func GetInstance() NotificationService {
 	if singleInstance == nil {
 		lock.Lock()
 		defer lock.Unlock()
-		fmt.Println("Creating single instance now.")
 		singleInstance = &NotificationDispatcher{
-			UserNotifications: map[string]chan string{},
+			UserNotifications: make(map[string]*NotificationChannel),
 			UserLock:          sync.Mutex{},
 		}
 	}
@@ -36,41 +39,57 @@ func GetInstance() NotificationService {
 	return singleInstance
 }
 
-func (t *NotificationDispatcher) CreateNotificationChannel(uid string) chan string {
+func SetInstance(NotificationService NotificationService) {
+	if singleInstance == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		fmt.Println("Creating single instance now.")
+		singleInstance = NotificationService
+	}
+}
+
+func (t *NotificationDispatcher) CreateNotificationChannel(uid string) *NotificationChannel {
 	t.UserLock.Lock()
 	defer t.UserLock.Unlock()
 
-	userChannel := make(chan string)
-	t.UserNotifications[uid] = userChannel
-	return userChannel
+	notifChannel := &NotificationChannel{Channel: make(chan string), ConnectedClients: 1}
+	t.UserNotifications[uid] = notifChannel
+	fmt.Println("Created new channel for user " + uid)
+	return notifChannel
 }
 
-func (t *NotificationDispatcher) GetNotificationChannel(uid string) (chan string, error) {
+func (t *NotificationDispatcher) GetNotificationChannel(uid string) (*NotificationChannel, error) {
 	ch, ok := t.UserNotifications[uid]
-
-	if ok {
-		return ch, nil
+	if !ok {
+		return &NotificationChannel{}, errors.New("user does not have an open notification channel")
 	}
 
-	return nil, errors.New("user does not have an open notification channel")
+	fmt.Println("Reused channel for user " + uid)
+	return ch, nil
 }
 
 func (t *NotificationDispatcher) DeleteNotificationChannel(uid string) bool {
 	t.UserLock.Lock()
 	defer t.UserLock.Lock()
 
-	_, ok := t.UserNotifications[uid]
-
+	notificationChannel, ok := t.UserNotifications[uid]
 	if ok {
-		delete(t.UserNotifications, uid)
-		return true
+		if notificationChannel.ConnectedClients == 1 {
+			delete(t.UserNotifications, uid)
+			return true
+		}
+
+		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients - 1
 	}
 
 	return false
 }
 
 func (t *NotificationDispatcher) Broadcast(msg string) {
-	for _, ch := range t.UserNotifications {
-		ch <- msg
+	for uid, ch := range t.UserNotifications {
+		fmt.Println("Sent message to " + uid)
+		for range ch.ConnectedClients {
+			ch.Channel <- msg
+		}
 	}
 }

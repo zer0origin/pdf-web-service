@@ -4,9 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"pdf_service_web/controller"
-	"pdf_service_web/controller/models"
+	"pdf_service_web/controller/login"
+	"pdf_service_web/controller/register"
+	"pdf_service_web/controller/user"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+	"pdf_service_web/models"
 )
 
 func main() {
@@ -39,32 +42,38 @@ func main() {
 		AdminHandler: adminHandler,
 	}
 
-	middleware := controller.Middleware{
+	middleware := &controller.GinMiddleware{
 		Keycloak: cloakSetup,
 	}
+	controller.SetMiddlewareInstance(middleware)
 
-	loginController := controller.LoginController{
-		AuthenticatedRedirect: "/user/",
+	loginController := &login.GinLogin{
+		AuthenticatedRedirect: "/app",
 		Keycloak:              cloakSetup,
-		Middleware:            middleware,
+		Middleware:            *middleware,
 	}
+	login.SetControllerInstance(loginController)
 
-	router.GET("/", loginController.LoginRender)
+	router.GET("/", loginController.BaseRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
 	router.POST("/logout", loginController.Logout)
 
-	userController := controller.UserController{
+	userController := &user.GinUser{
 		KeycloakApi: cloakSetup,
 		JesrApi:     JesrApi,
 	}
-	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
-	router.GET("/user/info", middleware.RequireAuthenticated, userController.UserInfo)
-	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
-	router.GET("/user/:uid/events", userController.PushNotifications)
-	router.GET("/user/events/broadcast", userController.BroadcastNotification)
+	user.SetControllerInstance(userController)
 
-	registerController := controller.RegistrationController{
+	router.GET("/app", middleware.RequireAuthenticated, userController.UserBase)
+	router.GET("/user/details", middleware.RequireAuthenticated, userController.UserInfo)
+	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
+	router.GET("/user/dashboard", middleware.RequireAuthenticated, userController.UserDashboard)
+	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
+	router.GET("/user/events", middleware.RequireAuthenticated, userController.PushNotifications)
+	router.POST("/user/events/broadcast", userController.BroadcastNotification)
+
+	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",
 		KeycloakApi:         cloakSetup,
 	}

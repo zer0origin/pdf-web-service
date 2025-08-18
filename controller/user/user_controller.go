@@ -1,4 +1,4 @@
-package controller
+package user
 
 import (
 	"errors"
@@ -6,20 +6,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
-	"pdf_service_web/controller/models"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+	"pdf_service_web/models"
 	"pdf_service_web/service/NotificationService"
 	"strconv"
-	"time"
 )
 
-type UserController struct {
+type GinUser struct {
 	KeycloakApi *keycloak.Api
 	JesrApi     jesr.Api
 }
 
-func (t UserController) UserInfo(c *gin.Context) {
+func (t GinUser) UserBase(c *gin.Context) {
+	data := models.PageDefaults{
+		NavDetails: &models.NavDetails{IsAuthenticated: true},
+	}
+	c.HTML(http.StatusOK, "base", data)
+}
+
+func (t GinUser) UserInfo(c *gin.Context) {
 	accessToken := c.GetString(keycloak.AccessTokenKey)
 	user, err := t.KeycloakApi.SendUserInfoRequest(accessToken)
 	if err != nil {
@@ -27,14 +33,14 @@ func (t UserController) UserInfo(c *gin.Context) {
 		return
 	}
 	data := models.PageDefaults{
-		NavDetails:           models.NavDetails{IsAuthenticated: true},
+		NavDetails:           &models.NavDetails{IsAuthenticated: true},
 		ContentDetails:       user,
 		NotificationSettings: &models.NotificationSettings{Uid: user.Uid},
 	}
 	c.HTML(http.StatusOK, "userinfo", data)
 }
 
-func (t UserController) UserDashboard(c *gin.Context) {
+func (t GinUser) UserDashboard(c *gin.Context) {
 	token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
 		fmt.Println(fmt.Errorf("failed to authenticate access token in user dashboard %s", err.Error()))
@@ -48,14 +54,14 @@ func (t UserController) UserDashboard(c *gin.Context) {
 	documentsOwnerByUser, _ := t.JesrApi.GetDocuments(uuid.MustParse(subject))
 
 	data := models.PageDefaults{
-		NavDetails:           models.NavDetails{IsAuthenticated: true},
+		NavDetails:           &models.NavDetails{IsAuthenticated: true},
 		ContentDetails:       documentsOwnerByUser,
 		NotificationSettings: &models.NotificationSettings{Uid: subject},
 	}
 	c.HTML(http.StatusOK, "userdashboard", data)
 }
 
-func (t UserController) Upload(c *gin.Context) {
+func (t GinUser) Upload(c *gin.Context) {
 	accept := c.Request.Header["Content-Type"][0]
 	if accept == "application/x-www-form-urlencoded" {
 		baseString, baseStringPresent := c.GetPostForm("documentBase64String")
@@ -110,19 +116,19 @@ func (t UserController) Upload(c *gin.Context) {
 		}
 
 		c.HTML(http.StatusOK, "userdata", documentsOwnerByUser)
-		c.Status(http.StatusCreated)
 		return
 	}
 
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }
 
-func (t UserController) PushNotifications(c *gin.Context) {
+func (t GinUser) PushNotifications(c *gin.Context) {
 	fmt.Println("Request Received!")
 
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	token, err := t.KeycloakApi.AuthenticateJwtToken(cookie.Value)
@@ -136,12 +142,6 @@ func (t UserController) PushNotifications(c *gin.Context) {
 		return
 	}
 
-	uid := c.Param("uid")
-	if uid != subject {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errors.New("you are not authorized to read " + uid + " event stream")})
-		return
-	}
-
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
@@ -150,13 +150,24 @@ func (t UserController) PushNotifications(c *gin.Context) {
 	c.Writer.Flush()
 
 	notificationService := NotificationService.GetInstance()
-	userChannel := notificationService.CreateNotificationChannel(uid)
-	defer notificationService.DeleteNotificationChannel(uid)
+
+	notificationChannel, err := notificationService.GetNotificationChannel(subject)
+	retrieval := true
+	if err != nil {
+		notificationChannel = notificationService.CreateNotificationChannel(subject)
+		retrieval = false
+	}
+
+	if retrieval {
+		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients + 1
+	}
+
+	defer notificationService.DeleteNotificationChannel(subject)
 
 	clientGone := c.Request.Context().Done()
 	for {
 		select {
-		case msg := <-userChannel:
+		case msg := <-notificationChannel.Channel:
 			bytesWritten, err := fmt.Fprint(c.Writer, msg)
 			if err != nil {
 				fmt.Println(err.Error())
@@ -172,9 +183,19 @@ func (t UserController) PushNotifications(c *gin.Context) {
 	}
 }
 
-func (t UserController) BroadcastNotification(c *gin.Context) {
+type Broadcast struct {
+	Message string `json:"message"`
+}
+
+func (t GinUser) BroadcastNotification(c *gin.Context) {
+	bc := &Broadcast{}
+	err := c.ShouldBindJSON(bc)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
 	notificationService := NotificationService.GetInstance()
-	notificationService.Broadcast(fmt.Sprintf("data: <div>HELLO CONNECTED CLIENT %d</div>\n\n", time.Now().Unix()))
+	notificationService.Broadcast(fmt.Sprintf("data: %s\n\n", bc.Message))
 
 	c.Status(http.StatusOK)
 }

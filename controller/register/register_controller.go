@@ -1,12 +1,12 @@
-package controller
+package register
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/mail"
-	"pdf_service_web/controller/models"
 	"pdf_service_web/keycloak"
+	models2 "pdf_service_web/models"
 )
 
 type RegistrationController struct {
@@ -22,13 +22,13 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 		password, _ := c.GetPostForm("password")
 
 		if username == "" || password == "" || email == "" {
-			errorToSend := models.BasicError{ErrorMessage: "Fill in all text boxes!"}
+			errorToSend := models2.BasicError{ErrorMessage: "Fill in all text boxes!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		if !validEmail(email) {
-			errorToSend := models.BasicError{ErrorMessage: "Invalid email address!"}
+			errorToSend := models2.BasicError{ErrorMessage: "Invalid email address!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
@@ -38,7 +38,7 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 
 		if err != nil {
 			fmt.Println(err.Error())
-			errorToSend := models.BasicError{ErrorMessage: err.Error()}
+			errorToSend := models2.BasicError{ErrorMessage: err.Error()}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
@@ -52,8 +52,7 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 }
 
 func (t RegistrationController) RegisterRender(c *gin.Context) {
-	c.HTML(http.StatusOK, "register", models.PageDefaults{
-		NavDetails:     models.NavDetails{},
+	c.HTML(http.StatusOK, "register", models2.PageDefaults{
 		ContentDetails: gin.H{},
 	})
 }

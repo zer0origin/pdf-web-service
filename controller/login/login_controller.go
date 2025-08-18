@@ -1,51 +1,68 @@
-package controller
+package login
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"pdf_service_web/controller/models"
+	"pdf_service_web/controller"
 	"pdf_service_web/keycloak"
+	models2 "pdf_service_web/models"
 )
 
-type LoginController struct {
+type GinLogin struct {
 	AuthenticatedRedirect string
 	Keycloak              *keycloak.Api
-	Middleware            Middleware
+	Middleware            controller.GinMiddleware
 }
 
-func (t LoginController) LoginRender(c *gin.Context) {
+var onSucceeded = func(c *gin.Context, accessToken string) {
+	c.Set(keycloak.AccessTokenKey, accessToken)
+}
+
+func (t GinLogin) BaseRender(c *gin.Context) {
 	redirect := func(accessToken string) {
 		c.Redirect(http.StatusFound, t.AuthenticatedRedirect)
 	}
 
 	signin := func() {
-		c.HTML(http.StatusOK, "login", models.PageDefaults{
-			NavDetails:     models.NavDetails{},
+		c.HTML(http.StatusOK, "base", models2.PageDefaults{
 			ContentDetails: gin.H{},
 		})
 	}
 
-	if err := t.Middleware.isAuthenticated(c, false, signin, redirect); err != nil {
+	if err := t.Middleware.IsAuthenticated(c, false, signin, redirect); err != nil {
 		fmt.Println(err)
 	}
 }
 
-func (t LoginController) LoginAuthHandler(c *gin.Context) {
+func (t GinLogin) LoginRender(c *gin.Context) {
+	accept := c.Request.Header["Accept"][0]
+	if accept == "text/html" {
+		c.HTML(http.StatusOK, "login", models2.PageDefaults{
+			ContentDetails: gin.H{},
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusBadRequest, "Unsupported accept header")
+}
+
+func (t GinLogin) LoginAuthHandler(c *gin.Context) {
 	accept := c.Request.Header["Accept"][0]
 	if accept == "text/html" {
 		username, userPresent := c.GetPostForm("username")
 		password, passPresent := c.GetPostForm("password")
 
 		if !userPresent || !passPresent || username == "" || password == "" {
-			errorToSend := models.BasicError{ErrorMessage: "Fill in all text boxes!"}
+			errorToSend := models2.BasicError{ErrorMessage: "Fill in all text boxes!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		authUser, err := t.Keycloak.SendLoginAuthAttemptWithPasswordAndUsername(username, password)
 		if err != nil {
-			errorToSend := models.BasicError{ErrorMessage: "Incorrect username or password"}
+			errorToSend := models2.BasicError{ErrorMessage: "Incorrect username or password"}
 			c.HTML(http.StatusUnauthorized, "errorMessage", errorToSend)
 			return
 		}
@@ -54,7 +71,6 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 		c.SetCookie("refreshToken", authUser.RefreshToken, authUser.RefreshExpiresIn, "/", "", false, false)
 		c.SetCookie("idToken", authUser.IdToken, authUser.RefreshExpiresIn, "/", "", false, false)
 		c.Header("HX-Redirect", t.AuthenticatedRedirect)
-		c.Status(http.StatusOK)
 		return
 	}
 
@@ -79,7 +95,7 @@ func (t LoginController) LoginAuthHandler(c *gin.Context) {
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }
 
-func (t LoginController) Logout(c *gin.Context) {
+func (t GinLogin) Logout(c *gin.Context) {
 	fmt.Println("Logout handler called")
 	accept := c.Request.Header["Accept"][0]
 	if accept == "text/html" {
