@@ -148,7 +148,7 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	c.Writer.Flush()
 
-	notificationService := NotificationService.GetInstance()
+	notificationService := NotificationService.GetServiceInstance()
 
 	retrieval := true
 	notificationChannel, err := notificationService.GetNotificationChannel(subject)
@@ -194,7 +194,7 @@ func (t GinUser) BroadcastNotification(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	notificationService := NotificationService.GetInstance()
+	notificationService := NotificationService.GetServiceInstance()
 	notificationService.Broadcast(fmt.Sprintf("data: %s\n\n", bc.Message))
 
 	c.Status(http.StatusOK)

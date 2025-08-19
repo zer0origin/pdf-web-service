@@ -6,13 +6,6 @@ import (
 	"sync"
 )
 
-type NotificationService interface {
-	CreateNotificationChannel(uid string) *NotificationChannel
-	DeleteNotificationChannel(uid string) bool
-	GetNotificationChannel(uid string) (*NotificationChannel, error)
-	Broadcast(msg string)
-}
-
 type NotificationDispatcher struct {
 	UserNotifications map[string]*NotificationChannel
 	UserLock          sync.Mutex
@@ -21,31 +14,6 @@ type NotificationDispatcher struct {
 type NotificationChannel struct {
 	Channel          chan string
 	ConnectedClients int
-}
-
-var lock = &sync.Mutex{}
-var singleInstance NotificationService
-
-func GetInstance() NotificationService {
-	if singleInstance == nil {
-		lock.Lock()
-		defer lock.Unlock()
-		singleInstance = &NotificationDispatcher{
-			UserNotifications: make(map[string]*NotificationChannel),
-			UserLock:          sync.Mutex{},
-		}
-	}
-
-	return singleInstance
-}
-
-func SetInstance(NotificationService NotificationService) {
-	if singleInstance == nil {
-		lock.Lock()
-		defer lock.Unlock()
-		fmt.Println("Creating single instance now.")
-		singleInstance = NotificationService
-	}
 }
 
 func (t *NotificationDispatcher) CreateNotificationChannel(uid string) *NotificationChannel {
