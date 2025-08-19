@@ -16,6 +16,7 @@ var lock = &sync.Mutex{}
 var singleInstance NotificationService
 
 func GetServiceInstance() NotificationService {
+	lock.Lock()
 	defer lock.Unlock()
 	if singleInstance == nil {
 		lock.Lock()
