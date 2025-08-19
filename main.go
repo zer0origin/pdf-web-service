@@ -65,7 +65,7 @@ func main() {
 	}
 	user.SetControllerInstance(userController)
 
-	router.GET("/app", middleware.RequireAuthenticated, userController.UserBase)
+	router.GET("/app", middleware.RequireAuthenticated, userController.AppBase)
 	router.GET("/user/details", middleware.RequireAuthenticated, userController.UserInfo)
 	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
 	router.GET("/user/dashboard", middleware.RequireAuthenticated, userController.UserDashboard)

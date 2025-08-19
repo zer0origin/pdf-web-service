@@ -71,7 +71,7 @@ func (t *RealmHandler) SendLoginAuthAttemptWithRefreshToken(refreshToken string)
 	}
 
 	request, err := t.handleLoginAuthRequest(req)
-	return request, nil
+	return request, err
 }
 
 func (t *RealmHandler) handleLoginAuthRequest(req *http.Request) (TokenResponse, error) {

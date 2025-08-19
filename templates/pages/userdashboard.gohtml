@@ -58,11 +58,3 @@
 
     <script src="/js/upload.js"></script>
 {{end}}
-
-{{block "notifications" . }}
-    <div hx-ext="sse">
-        <div sse-connect="/user/events" sse-swap="message">
-            CONTENTS GO HERE!
-        </div>
-    </div>
-{{end}}

@@ -18,7 +18,7 @@ type GinUser struct {
 	JesrApi     jesr.Api
 }
 
-func (t GinUser) UserBase(c *gin.Context) {
+func (t GinUser) AppBase(c *gin.Context) {
 	data := models.PageDefaults{
 		NavDetails: &models.NavDetails{IsAuthenticated: true},
 	}
@@ -146,14 +146,14 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
-	// Important: Flush the headers to the client immediately
 	c.Writer.Flush()
 
 	notificationService := NotificationService.GetInstance()
 
-	notificationChannel, err := notificationService.GetNotificationChannel(subject)
 	retrieval := true
+	notificationChannel, err := notificationService.GetNotificationChannel(subject)
 	if err != nil {
+		fmt.Println(err.Error())
 		notificationChannel = notificationService.CreateNotificationChannel(subject)
 		retrieval = false
 	}

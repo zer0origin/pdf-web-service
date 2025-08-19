@@ -59,6 +59,9 @@ func (t *NotificationDispatcher) CreateNotificationChannel(uid string) *Notifica
 }
 
 func (t *NotificationDispatcher) GetNotificationChannel(uid string) (*NotificationChannel, error) {
+	t.UserLock.Lock()
+	defer t.UserLock.Unlock()
+
 	ch, ok := t.UserNotifications[uid]
 	if !ok {
 		return &NotificationChannel{}, errors.New("user does not have an open notification channel")
@@ -70,7 +73,7 @@ func (t *NotificationDispatcher) GetNotificationChannel(uid string) (*Notificati
 
 func (t *NotificationDispatcher) DeleteNotificationChannel(uid string) bool {
 	t.UserLock.Lock()
-	defer t.UserLock.Lock()
+	defer t.UserLock.Unlock()
 
 	notificationChannel, ok := t.UserNotifications[uid]
 	if ok {

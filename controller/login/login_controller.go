@@ -15,10 +15,6 @@ type GinLogin struct {
 	Middleware            controller.GinMiddleware
 }
 
-var onSucceeded = func(c *gin.Context, accessToken string) {
-	c.Set(keycloak.AccessTokenKey, accessToken)
-}
-
 func (t GinLogin) BaseRender(c *gin.Context) {
 	redirect := func(accessToken string) {
 		c.Redirect(http.StatusFound, t.AuthenticatedRedirect)
