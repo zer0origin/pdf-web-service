@@ -1,0 +1,7 @@
+{{block "notifications" . }}
+    <div id="sse" hx-ext="sse" >
+        <div sse-connect="/user/events" sse-swap="message">
+            CONTENTS GO HERE!
+        </div>
+    </div>
+{{end}}
