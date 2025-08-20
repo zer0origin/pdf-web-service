@@ -70,8 +70,9 @@ func main() {
 	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
 	router.GET("/user/dashboard", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
-	router.GET("/user/events", middleware.RequireAuthenticated, userController.PushNotifications)
+	router.GET("/user/events", userController.PushNotifications)
 	router.POST("/user/events/broadcast", userController.BroadcastNotification)
+	router.DELETE("/user/documents/:uid", middleware.RequireAuthenticated, userController.DeleteDocument)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",

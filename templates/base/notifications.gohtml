@@ -1,7 +1,9 @@
 {{block "notifications" . }}
-    <div id="sse" hx-ext="sse" >
-        <div sse-connect="/user/events" sse-swap="message">
-            CONTENTS GO HERE!
+    <div id="sse" hx-ext="sse" sse-connect="/user/events">
+        <div hx-get="/user/" hx-trigger="sse:DocumentDelete">
+        </div>
+
+        <div sse-swap="message">
         </div>
     </div>
 {{end}}

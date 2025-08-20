@@ -13,3 +13,10 @@ type NavDetails struct {
 type NotificationSettings struct {
 	Uid string
 }
+
+type PageInfo struct {
+	Offset   int
+	NextPage int
+	LastPage int
+	Limit    int
+}

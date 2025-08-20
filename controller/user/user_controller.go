@@ -40,6 +40,11 @@ func (t GinUser) UserInfo(c *gin.Context) {
 	c.HTML(http.StatusOK, "userinfo", data)
 }
 
+type ContentDetails struct {
+	PageInfo models.PageInfo
+	UserData any
+}
+
 func (t GinUser) UserDashboard(c *gin.Context) {
 	token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
@@ -50,12 +55,53 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 		return
 	}
 
+	var limit int8 = 15
+	if limitValue, present := c.GetQuery("limit"); present {
+		parseInt, err := strconv.ParseInt(limitValue, 10, 8)
+		if err != nil {
+			return
+		}
+
+		limit = int8(parseInt)
+	}
+
+	var offset int8 = 0
+	if offsetValue, present := c.GetQuery("offset"); present {
+		parseInt, err := strconv.ParseInt(offsetValue, 10, 8)
+		if err != nil {
+			return
+		}
+
+		offset = int8(parseInt)
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	if limit <= 1 {
+		limit = 1
+	}
+
 	subject, _ := token.Claims.GetSubject()
-	documentsOwnerByUser, _ := t.JesrApi.GetDocuments(uuid.MustParse(subject))
+	documentsOwnerByUser, _ := t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+
+	if offset != 0 && len(documentsOwnerByUser) == 0 {
+		offset = 0
+		documentsOwnerByUser, _ = t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+	}
 
 	data := models.PageDefaults{
-		NavDetails:           &models.NavDetails{IsAuthenticated: true},
-		ContentDetails:       documentsOwnerByUser,
+		NavDetails: &models.NavDetails{IsAuthenticated: true},
+		ContentDetails: ContentDetails{
+			PageInfo: models.PageInfo{
+				Offset:   int(offset),
+				NextPage: int(offset + limit),
+				LastPage: int(offset - limit),
+				Limit:    int(limit),
+			},
+			UserData: documentsOwnerByUser,
+		},
 		NotificationSettings: &models.NotificationSettings{Uid: subject},
 	}
 	c.HTML(http.StatusOK, "userdashboard", data)
@@ -109,31 +155,71 @@ func (t GinUser) Upload(c *gin.Context) {
 			return
 		}
 
-		documentsOwnerByUser, err := t.JesrApi.GetDocuments(uuid.MustParse(subject))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.HTML(http.StatusOK, "userdata", documentsOwnerByUser)
+		t.UserDashboard(c)
+		notificationService := NotificationService.GetServiceInstance()
+		_ = notificationService.SendMessage(subject, "Successfully uploaded document")
+		t.UserDashboard(c)
 		return
 	}
 
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
 }
 
+func (t GinUser) DeleteDocument(c *gin.Context) {
+	documentUidStr := c.Param("uid")
+	uid, err := uuid.Parse(documentUidStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse uid"})
+		return
+	}
+	token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ownerUuidStr, err := token.Claims.GetSubject()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	resultsChannel := make(chan error)
+	go func() {
+		resultsChannel <- t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
+	}()
+
+	select {
+	case err = <-resultsChannel:
+		instance := NotificationService.GetServiceInstance()
+		if err != nil {
+			_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", err.Error())
+		}
+
+		_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", "Success")
+	}
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
 func (t GinUser) PushNotifications(c *gin.Context) {
-	fmt.Println("Request Received!")
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Writer.Flush()
 
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = '/'</script"))
 		return
 	}
 
 	token, err := t.KeycloakApi.AuthenticateJwtToken(cookie.Value)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = '/'</script"))
 		return
 	}
 
@@ -142,18 +228,11 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Writer.Flush()
-
 	notificationService := NotificationService.GetServiceInstance()
 
 	retrieval := true
 	notificationChannel, err := notificationService.GetNotificationChannel(subject)
 	if err != nil {
-		fmt.Println(err.Error())
 		notificationChannel = notificationService.CreateNotificationChannel(subject)
 		retrieval = false
 	}
@@ -168,13 +247,12 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	for {
 		select {
 		case msg := <-notificationChannel.Channel:
-			bytesWritten, err := fmt.Fprint(c.Writer, msg)
+			_, err := fmt.Fprint(c.Writer, msg)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
 			c.Writer.Flush()
-			fmt.Printf("Bytes sent to client: %d\n", bytesWritten) // Added newline for cleaner output
 		case <-clientGone:
 			fmt.Println("Client has disconnected!")
 
@@ -195,7 +273,7 @@ func (t GinUser) BroadcastNotification(c *gin.Context) {
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
-	notificationService.Broadcast(fmt.Sprintf("data: %s\n\n", bc.Message))
+	notificationService.Broadcast(bc.Message)
 
 	c.Status(http.StatusOK)
 }

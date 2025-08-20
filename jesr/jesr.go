@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"io"
 	"net/http"
+	"pdf_service_web/models"
 	"strings"
 )
 
@@ -15,11 +16,11 @@ type Api struct {
 }
 
 type GetDocumentsResponse struct {
-	Documents []Document `json:"documents"`
+	Documents []models.Document `json:"documents"`
 }
 
-func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
-	url := fmt.Sprintf("%s/api/v1/documents?exclude=pdfBase64&ownerUUID=%s", t.BaseUrl, uid.String())
+func (t Api) GetDocumentsByOwnerUUID(ownerUUID uuid.UUID, limit, offset int8) ([]models.Document, error) {
+	url := fmt.Sprintf("%s/api/v1/documents?limit=%d&offset=%d&exclude=pdfBase64&ownerUUID=%s", t.BaseUrl, limit, offset, ownerUUID.String())
 	method := "GET"
 
 	req, err := http.NewRequest(method, url, nil)
@@ -38,6 +39,25 @@ func (t Api) GetDocuments(uid uuid.UUID) ([]Document, error) {
 	response := &GetDocumentsResponse{}
 	err = json.Unmarshal(body, response)
 	return response.Documents, err
+}
+
+func (t Api) DeleteDocuments(documentUUID, ownerUUID uuid.UUID) error {
+	url := fmt.Sprintf("%s/api/v1/documents?documentUUID=%s&ownerUUID=%s", t.BaseUrl, documentUUID.String(), ownerUUID.String())
+	method := "DELETE"
+
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	return nil
 }
 
 type UploadRequest struct {

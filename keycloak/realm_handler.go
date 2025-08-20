@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 type RealmHandler struct {
@@ -15,6 +16,7 @@ type RealmHandler struct {
 	Client       string
 	ClientSecret string
 	PublicKey    string
+	mutex        sync.Mutex
 }
 
 // SendUserInfoRequest
@@ -104,8 +106,10 @@ func (t *RealmHandler) handleLoginAuthRequest(req *http.Request) (TokenResponse,
 }
 
 func (t *RealmHandler) GetSigningKey() (string, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	if t.PublicKey == "" {
-		fmt.Println("Contacting keycloak, obtaining realm public key")
+		fmt.Println("[keycloak] Contacting keycloak, obtaining realm public key")
 		url := fmt.Sprintf("%s/realms/%s/", t.BaseUrl, t.RealmName)
 		method := "GET"
 
@@ -139,7 +143,6 @@ func (t *RealmHandler) GetSigningKey() (string, error) {
 		}
 
 		t.PublicKey = data.PublicKey
-		fmt.Println(t.PublicKey)
 	}
 
 	return fmt.Sprintf(`-----BEGIN PUBLIC KEY-----

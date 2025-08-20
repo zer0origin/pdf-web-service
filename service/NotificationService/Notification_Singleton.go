@@ -10,6 +10,8 @@ type NotificationService interface {
 	DeleteNotificationChannel(uid string) bool
 	GetNotificationChannel(uid string) (*NotificationChannel, error)
 	Broadcast(msg string)
+	SendMessage(uid, msg string) error
+	SendEvent(uid, eventName, msg string) error
 }
 
 var lock = &sync.Mutex{}
@@ -19,10 +21,10 @@ func GetServiceInstance() NotificationService {
 	lock.Lock()
 	defer lock.Unlock()
 	if singleInstance == nil {
-		lock.Lock()
 		singleInstance = &NotificationDispatcher{
 			UserNotifications: make(map[string]*NotificationChannel),
 			UserLock:          sync.Mutex{},
+			templates:         map[string]string{},
 		}
 	}
 

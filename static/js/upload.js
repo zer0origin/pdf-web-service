@@ -6,12 +6,6 @@ window.filesListElement = document.getElementById('fileListButton');
 setup()
 
 function setup() {
-    document.getElementById('customUploadButton').addEventListener('click', function () {
-        if (!window.filesListElement.files[0]) {
-            window.filesListElement.click();
-        }
-    });
-
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         let a = (event) => {
             event.preventDefault()
@@ -61,8 +55,6 @@ function htmxUploadContents(event) {
 
 //USED BY HTMX
 async function htmxConfirmEvent(event) {
-    console.log(event);
-
     let fileData = window.filesListElement.files[0];
     if (!fileData) {
         return;
@@ -96,10 +88,11 @@ function handleDrop(e) {
     }
 
     window.filesListElement.files = e.dataTransfer.files
-    updateText()
+    updateText(e)
 }
 
-function updateText() {
+function updateText(event) {
+    console.log(event)
     const file = window.filesListElement.files[0]
 
     if (!file) {

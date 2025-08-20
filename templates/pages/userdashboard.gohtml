@@ -9,21 +9,47 @@
 
 {{block "userdata" .}}
     <div class="text-start w-50" id="documents">
-        {{if .}}
-            <div class="d-flex flex-row align-items-center align-items-center w-100">
-                <h3 class="m-0 w-100">Documents</h3> <a onclick="toggleUploadPopup()"
-                                                        class="btn btn-sm btn-outline-primary">Upload</a>
+        {{if .UserData}}
+            <div class="d-flex flex-row align-items-center align-items-center w-100 gap-2">
+                <h3 class="m-0 w-100">Documents</h3>
+                <div class="d-flex gap-1">
+                    {{if eq .PageInfo.Limit 5}}
+                        <a class="btn btn-sm btn-outline-dark active" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=5&offset={{.PageInfo.Offset}}">5</a>
+                    {{else}}
+                        <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=5&offset={{.PageInfo.Offset}}">5</a>
+                    {{end}}
+                    {{if eq .PageInfo.Limit 10}}
+                        <a class="btn btn-sm btn-outline-dark active" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=10&offset={{.PageInfo.Offset}}">10</a>
+                    {{else}}
+                        <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=10&offset={{.PageInfo.Offset}}">10</a>
+                    {{end}}
+                    {{if eq .PageInfo.Limit 15}}
+                        <a class="btn btn-sm btn-outline-dark active" style="width: 49.14px" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=15&offset={{.PageInfo.Offset}}">15</a>
+                    {{else}}
+                        <a class="btn btn-sm btn-outline-dark" style="width: 49.14px" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=15&offset={{.PageInfo.Offset}}">15</a>
+                    {{end}}
+                </div>
+                <a onclick="toggleUploadPopup()" class="btn btn-sm btn-outline-primary">Upload</a>
             </div>
-            <div class="d-flex flex-column align-items-center align-items-center w-100">
-                {{range .}}
-                    <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
-                        <p class="m-0 w-100">{{.DocumentTitle}}
-                        </p>
-                        <a class="btn btn-sm btn-secondary">View</a>
-                        <a class="btn btn-sm btn-danger">Delete</a>
-                        <hr>
-                    </div>
-                {{end}}
+            <div id="data-container" class="d-flex flex-column justify-content-between align-items-center w-100" style="height: 586px">
+                <div class="d-flex flex-column align-items-center w-100">
+                    {{range .UserData}}
+                        <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
+                            <p class="m-0 w-100">{{.DocumentTitle}}</p>
+
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-secondary" >View</a>
+                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-trigger="click" hx-delete="/user/documents/{{.Uuid}}">Delete</a>
+                            </div>
+                            <hr>
+                        </div>
+                    {{end}}
+                </div>
+
+                <div class="d-flex gap-1">
+                    <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit={{.PageInfo.Limit}}&offset={{.PageInfo.LastPage}}">Back</a>
+                    <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit={{.PageInfo.Limit}}&offset={{.PageInfo.NextPage}}">Next</a>
+                </div>
             </div>
         {{else}}
             <div class="d-flex align-items-center align-items-center w-100">
