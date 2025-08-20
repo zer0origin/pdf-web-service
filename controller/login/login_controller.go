@@ -32,16 +32,11 @@ func (t GinLogin) BaseRender(c *gin.Context) {
 }
 
 func (t GinLogin) LoginRender(c *gin.Context) {
-	accept := c.Request.Header["Accept"][0]
-	if accept == "text/html" {
-		c.HTML(http.StatusOK, "login", models2.PageDefaults{
-			ContentDetails: gin.H{},
-		})
+	c.HTML(http.StatusOK, "login", models2.PageDefaults{
+		ContentDetails: gin.H{},
+	})
 
-		return
-	}
-
-	c.JSON(http.StatusBadRequest, "Unsupported accept header")
+	return
 }
 
 func (t GinLogin) LoginAuthHandler(c *gin.Context) {

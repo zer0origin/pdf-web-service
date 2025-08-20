@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"pdf_service_web/controller"
 	"pdf_service_web/controller/login"
 	"pdf_service_web/controller/register"
@@ -67,7 +68,7 @@ func main() {
 
 	router.GET("/app", middleware.RequireAuthenticated, userController.AppBase)
 	router.GET("/user/details", middleware.RequireAuthenticated, userController.UserInfo)
-	router.POST("/user/upload", middleware.RequireAuthenticated, userController.Upload)
+	router.POST("/user/upload", BodySizeMiddleware(10*1024*1024), middleware.RequireAuthenticated, userController.Upload)
 	router.GET("/user/dashboard", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/", middleware.RequireAuthenticated, userController.UserDashboard)
 	router.GET("/user/events", userController.PushNotifications)
@@ -89,5 +90,12 @@ func mustNotBeEmpty(errorHandle func(string), a ...string) {
 		if len(s) == 0 {
 			errorHandle(s)
 		}
+	}
+}
+
+func BodySizeMiddleware(limit int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, limit)
+		c.Next()
 	}
 }

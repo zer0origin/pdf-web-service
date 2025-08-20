@@ -121,7 +121,7 @@ func (t GinUser) Upload(c *gin.Context) {
 
 		ownerType, err := strconv.Atoi(ownerTypeString)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -149,17 +149,21 @@ func (t GinUser) Upload(c *gin.Context) {
 		}
 
 		data.OwnerUUID = uuid.MustParse(subject)
-		err = t.JesrApi.UploadDocument(data)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
 
-		t.UserDashboard(c)
-		notificationService := NotificationService.GetServiceInstance()
-		_ = notificationService.SendMessage(subject, "Successfully uploaded document")
-		t.UserDashboard(c)
-		return
+		results := make(chan error)
+		go func() {
+			results <- t.JesrApi.UploadDocument(data)
+		}()
+
+		select {
+		case err = <-results:
+			instance := NotificationService.GetServiceInstance()
+			if err != nil {
+				_ = instance.SendEvent(subject, "DocumentDelete", err.Error())
+			}
+
+			_ = instance.SendEvent(subject, "DocumentDelete", "Success")
+		}
 	}
 
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
@@ -213,13 +217,13 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
-		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = '/'</script"))
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = \"/\"</script>"))
 		return
 	}
 
 	token, err := t.KeycloakApi.AuthenticateJwtToken(cookie.Value)
 	if err != nil {
-		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = '/'</script"))
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = \"/\"</script>"))
 		return
 	}
 

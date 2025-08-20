@@ -79,6 +79,8 @@
            hx-on::confirm="htmxConfirmEvent(event)" hx-on::after-Request="reset()" hx-post="/user/upload"
            class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px">Upload files</a>
 
+        <p>9MB Limit</p>
+
         <input id="fileListButton" type="file" class="d-none" hx-on:input="updateText()">
     </div>
 
