@@ -153,6 +153,7 @@ func (t GinUser) Upload(c *gin.Context) {
 		results := make(chan error)
 		go func() {
 			results <- t.JesrApi.UploadDocument(data)
+			//SEND FOR RESULTS FOR PROCESSING
 		}()
 
 		select {
@@ -233,18 +234,7 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
-
-	retrieval := true
-	notificationChannel, err := notificationService.GetNotificationChannel(subject)
-	if err != nil {
-		notificationChannel = notificationService.CreateNotificationChannel(subject)
-		retrieval = false
-	}
-
-	if retrieval {
-		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients + 1
-	}
-
+	notificationChannel := notificationService.GetOrCreateChannel(subject)
 	defer notificationService.DeleteNotificationChannel(subject)
 
 	clientGone := c.Request.Context().Done()

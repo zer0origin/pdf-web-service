@@ -12,6 +12,20 @@ type NotificationDispatcher struct {
 	templates         map[string]string
 }
 
+func (t *NotificationDispatcher) GetOrCreateChannel(subject string) *NotificationChannel {
+	t.UserLock.Lock()
+	defer t.UserLock.Unlock()
+
+	notificationChannel, err := t.GetNotificationChannel(subject)
+	if err != nil {
+		notificationChannel = t.CreateNotificationChannel(subject)
+	} else {
+		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients + 1
+	}
+
+	return notificationChannel
+}
+
 type NotificationChannel struct {
 	Channel          chan string
 	ConnectedClients int
@@ -58,7 +72,7 @@ func (t *NotificationDispatcher) DeleteNotificationChannel(uid string) bool {
 }
 
 func (t *NotificationDispatcher) Broadcast(msg string) {
-	for uid, _ := range t.UserNotifications {
+	for uid := range t.UserNotifications {
 		_ = t.SendMessage(uid, msg)
 	}
 }
