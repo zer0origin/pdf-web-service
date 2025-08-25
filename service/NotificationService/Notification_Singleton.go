@@ -12,7 +12,6 @@ type NotificationService interface {
 	Broadcast(msg string)
 	SendMessage(uid, msg string) error
 	SendEvent(uid, eventName, msg string) error
-	GetOrCreateChannel(subject string) *NotificationChannel
 }
 
 var lock = &sync.Mutex{}

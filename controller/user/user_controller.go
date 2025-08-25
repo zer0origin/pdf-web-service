@@ -153,7 +153,6 @@ func (t GinUser) Upload(c *gin.Context) {
 		results := make(chan error)
 		go func() {
 			results <- t.JesrApi.UploadDocument(data)
-			//SEND FOR RESULTS FOR PROCESSING
 		}()
 
 		select {
@@ -165,6 +164,8 @@ func (t GinUser) Upload(c *gin.Context) {
 
 			_ = instance.SendEvent(subject, "DocumentDelete", "Success")
 		}
+
+		return
 	}
 
 	c.JSON(http.StatusBadRequest, "Unsupported accept header")
@@ -234,7 +235,18 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
-	notificationChannel := notificationService.GetOrCreateChannel(subject)
+
+	retrieval := true
+	notificationChannel, err := notificationService.GetNotificationChannel(subject)
+	if err != nil {
+		notificationChannel = notificationService.CreateNotificationChannel(subject)
+		retrieval = false
+	}
+
+	if retrieval {
+		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients + 1
+	}
+
 	defer notificationService.DeleteNotificationChannel(subject)
 
 	clientGone := c.Request.Context().Done()
