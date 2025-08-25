@@ -162,7 +162,7 @@ func (t GinUser) Upload(c *gin.Context) {
 				_ = instance.SendEvent(subject, "DocumentDelete", err.Error())
 			}
 
-			_ = instance.SendEvent(subject, "DocumentDelete", "Success")
+			_ = instance.SendEvent(subject, "DocumentUpload", "Success")
 		}
 
 		return
@@ -199,7 +199,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	case err = <-resultsChannel:
 		instance := NotificationService.GetServiceInstance()
 		if err != nil {
-			_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", err.Error())
+			_ = instance.SendEvent(ownerUuidStr, "DocumentDeleted", err.Error())
 		}
 
 		_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", "Success")
@@ -235,19 +235,12 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
-
-	retrieval := true
-	notificationChannel, err := notificationService.GetNotificationChannel(subject)
-	if err != nil {
-		notificationChannel = notificationService.CreateNotificationChannel(subject)
-		retrieval = false
-	}
-
-	if retrieval {
-		notificationChannel.ConnectedClients = notificationChannel.ConnectedClients + 1
-	}
-
+	notificationChannel, err := notificationService.GetOrCreateNotificationChannel(subject)
 	defer notificationService.DeleteNotificationChannel(subject)
+	if err != nil {
+		fmt.Println("Failed to create notification channel for " + subject)
+		return
+	}
 
 	clientGone := c.Request.Context().Done()
 	for {

@@ -27,6 +27,23 @@ func (t *NotificationDispatcher) CreateNotificationChannel(uid string) *Notifica
 	return notifChannel
 }
 
+func (t *NotificationDispatcher) GetOrCreateNotificationChannel(uid string) (*NotificationChannel, error) {
+	t.UserLock.Lock()
+	defer t.UserLock.Unlock()
+
+	ch, ok := t.UserNotifications[uid]
+	if !ok {
+		notifChannel := &NotificationChannel{Channel: make(chan string, 1), ConnectedClients: 1}
+		t.UserNotifications[uid] = notifChannel
+		fmt.Println("[NotificationService] Created new channel for user " + uid)
+		return notifChannel, nil
+	}
+
+	ch.ConnectedClients += 1
+	fmt.Println(fmt.Sprintf("[NotificationService] Reused channel for user %s | Connected %d", uid, ch.ConnectedClients))
+	return ch, nil
+}
+
 func (t *NotificationDispatcher) GetNotificationChannel(uid string) (*NotificationChannel, error) {
 	t.UserLock.Lock()
 	defer t.UserLock.Unlock()
