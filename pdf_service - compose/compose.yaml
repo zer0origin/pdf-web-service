@@ -43,7 +43,7 @@ services:
       timeout: 5s
       retries: 15
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
       - "9000:9000"
     command:
       - start-dev
