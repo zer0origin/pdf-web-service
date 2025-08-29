@@ -67,8 +67,61 @@ type UploadRequest struct {
 	OwnerUUID            uuid.UUID `json:"ownerUUID"`
 }
 
-func (t Api) UploadDocument(request UploadRequest) error {
+func (t Api) UploadDocument(request UploadRequest) (uuid.UUID, error) {
 	url := fmt.Sprintf("%s/api/v1/documents/", t.BaseUrl)
+	method := "POST"
+
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	body := string(bytes)
+
+	req, err := http.NewRequest(method, url, strings.NewReader(body))
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return uuid.Nil, errors.New("unexpected status code")
+
+	}
+
+	resBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	type ExpectedResponse struct {
+		DocumentUUID uuid.UUID `json:"documentUUID"`
+	}
+
+	data := &ExpectedResponse{}
+
+	err = json.Unmarshal(resBytes, &data)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return data.DocumentUUID, nil
+}
+
+type AddMetaRequest struct {
+	DocumentUUID         uuid.UUID `json:"documentUUID"`
+	OwnerUUID            uuid.UUID `json:"ownerUUID"`
+	OwnerType            int       `json:"ownerType"`
+	DocumentBase64String *string   `json:"documentBase64String"`
+}
+
+func (t Api) AddMeta(request AddMetaRequest) error {
+	url := fmt.Sprintf("%s/api/v1/meta/", t.BaseUrl)
 	method := "POST"
 
 	bytes, err := json.Marshal(request)
@@ -90,7 +143,12 @@ func (t Api) UploadDocument(request UploadRequest) error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New("unexpected status code")
+		bytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
 	}
 
 	return nil

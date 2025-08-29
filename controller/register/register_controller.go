@@ -35,7 +35,6 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 
 		fmt.Printf("Registration: %s, %s, %s\n", username, email, password)
 		err := t.KeycloakApi.CreateNewUserWithPassword(username, email, password, true, false)
-
 		if err != nil {
 			fmt.Println(err.Error())
 			errorToSend := models2.BasicError{ErrorMessage: err.Error()}

@@ -80,6 +80,10 @@ func getAdminLoginToken(realmConfig RealmHandler) (context.Context, error) {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get authentication token from keycloak server")
+	}
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -162,6 +166,12 @@ func (t *AdminHandler) CreateNewUserWithPassword(username, email, password strin
 	}
 
 	if res.StatusCode != http.StatusCreated {
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(string(body))
 		return fmt.Errorf("server encountered an unexpected error %d", res.StatusCode)
 	}
 

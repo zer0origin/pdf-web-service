@@ -1,6 +1,6 @@
 services:
   api:
-    image: pdf_service_api:1.1.11
+    image: pdf_service_api:1.1.16
     container_name: pdf_service_api
     environment:
       DATABASE_USER: user
@@ -8,11 +8,19 @@ services:
       DATABASE_PORT: 5432
       DATABASE_HOST: postgres
       DATABASE_DB: postgres
+      APP_PORT: 8080
+      DATA_SERVICE_URL: http://localhost:8083/
     ports:
       - "8082:8080"
     depends_on:
       postgres:
         condition: service_healthy
+
+  data:
+    image: pdf_service_data:0.0.5
+    container_name: pdf_service_data
+    ports:
+      - "8083:8080"
 
   postgres:
     image: postgres:16-alpine

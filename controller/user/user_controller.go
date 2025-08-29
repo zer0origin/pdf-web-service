@@ -125,7 +125,7 @@ func (t GinUser) Upload(c *gin.Context) {
 			return
 		}
 
-		data := jesr.UploadRequest{
+		uploadRequest := jesr.UploadRequest{
 			DocumentBase64String: baseString,
 			OwnerType:            ownerType,
 			DocumentTitle:        documentTile,
@@ -143,23 +143,38 @@ func (t GinUser) Upload(c *gin.Context) {
 			return
 		}
 
-		if data.OwnerType != 1 {
+		if uploadRequest.OwnerType != 1 {
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errors.New("owner type unsupported")})
 			return
 		}
 
-		data.OwnerUUID = uuid.MustParse(subject)
+		uploadRequest.OwnerUUID = uuid.MustParse(subject)
 
 		results := make(chan error)
 		go func() {
-			results <- t.JesrApi.UploadDocument(data)
+			docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
+			if err != nil {
+				results <- err
+				return
+			}
+
+			metaRequest := jesr.AddMetaRequest{
+				DocumentUUID:         docUUID,
+				OwnerUUID:            uploadRequest.OwnerUUID,
+				OwnerType:            uploadRequest.OwnerType,
+				DocumentBase64String: &uploadRequest.DocumentBase64String,
+			}
+
+			results <- t.JesrApi.AddMeta(metaRequest)
 		}()
 
 		select {
 		case err = <-results:
 			instance := NotificationService.GetServiceInstance()
 			if err != nil {
-				_ = instance.SendEvent(subject, "DocumentDelete", err.Error())
+				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
+				_ = instance.SendMessage(subject, "Error uploading document!")
+				return
 			}
 
 			_ = instance.SendEvent(subject, "DocumentUpload", "Success")
