@@ -8,6 +8,7 @@ import (
 	"pdf_service_web/controller/login"
 	"pdf_service_web/controller/register"
 	"pdf_service_web/controller/user"
+	"pdf_service_web/controller/viewer"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
 	"pdf_service_web/models"
@@ -16,7 +17,7 @@ import (
 func main() {
 	handleEmptyJesr := func(str string) { panic("Jesr Api Url must be present.") }
 	mustNotBeEmpty(handleEmptyJesr, models.JESR_API_BASEURL)
-	JesrApi := jesr.Api{BaseUrl: models.JESR_API_BASEURL}
+	jesrApi := jesr.Api{BaseUrl: models.JESR_API_BASEURL}
 
 	handleEmptyKeycloak := func(str string) { panic("Database login credentials must be present.") }
 	mustNotBeEmpty(handleEmptyKeycloak, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
@@ -62,7 +63,7 @@ func main() {
 
 	userController := &user.GinUser{
 		KeycloakApi: cloakSetup,
-		JesrApi:     JesrApi,
+		JesrApi:     jesrApi,
 	}
 	user.SetControllerInstance(userController)
 
@@ -74,6 +75,13 @@ func main() {
 	router.GET("/user/events", userController.PushNotifications)
 	router.POST("/user/events/broadcast", userController.BroadcastNotification)
 	router.DELETE("/user/documents/:uid", middleware.RequireAuthenticated, userController.DeleteDocument)
+
+	viewerController := &viewer.GinViewer{
+		KeycloakApi: cloakSetup,
+		JesrApi:     jesrApi,
+	}
+	viewer.SetViewerControllerInstance(viewerController)
+	router.GET("/viewer/documents/:uid", middleware.RequireAuthenticated, viewerController.GetViewer)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",

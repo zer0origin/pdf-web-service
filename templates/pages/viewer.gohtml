@@ -1,0 +1,11 @@
+{{block "viewer" . }}
+    <div id="contents" hx-swap-oob="#contents">
+        <h2>Page Viewer</h2>
+        <hr>
+        <div class="text-start w-50" id="documents">
+            {{range .Images}}
+                <img width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{.}}">
+            {{end}}
+        </div>
+    </div>
+{{end}}

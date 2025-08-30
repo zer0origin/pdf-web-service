@@ -153,3 +153,36 @@ func (t Api) AddMeta(request AddMetaRequest) error {
 
 	return nil
 }
+
+func (t Api) GetMeta(documentUid, ownerUid string) (models.Meta, error) {
+	url := fmt.Sprintf("%s/api/v1/meta/?documentUUID=%s&ownerUUID=%s", t.BaseUrl, documentUid, ownerUid)
+	method := "GET"
+
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return models.Meta{}, err
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return models.Meta{}, err
+	}
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return models.Meta{}, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return models.Meta{}, fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
+	}
+
+	data := &models.Meta{}
+	err = json.Unmarshal(bytes, data)
+	if err != nil {
+		return models.Meta{}, err
+	}
+
+	return *data, nil
+}

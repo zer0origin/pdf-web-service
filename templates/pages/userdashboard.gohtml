@@ -34,12 +34,12 @@
             <div id="data-container" class="d-flex flex-column justify-content-between align-items-center w-100" style="height: 586px">
                 <div class="d-flex flex-column align-items-center w-100">
                     {{range .UserData}}
-                        <div class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
+                        <div id="document-{{.DocumentUUID}}" class="d-flex flex-row align-items-center w-100" style="padding-top: 0.25rem">
                             <p class="m-0 w-100">{{.DocumentTitle}}</p>
 
                             <div class="d-flex gap-2">
-                                <a class="btn btn-sm btn-secondary" >View</a>
-                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-trigger="click" hx-delete="/user/documents/{{.Uuid}}">Delete</a>
+                                <a class="btn btn-sm btn-secondary" hx-get="/viewer/documents/{{.DocumentUUID}}">View</a>
+                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-trigger="click" hx-target="document-{{.DocumentUUID}}" hx-delete="/user/documents/{{.DocumentUUID}}">Delete</a>
                             </div>
                             <hr>
                         </div>

@@ -1,4 +1,4 @@
-package user
+package viewer
 
 import (
 	"fmt"
@@ -6,19 +6,19 @@ import (
 )
 
 var lock = &sync.Mutex{}
-var singleInstance *GinUser
+var singleInstance *GinViewer
 
-func GetUserControllerInstance() *GinUser {
+func GetViewerControllerInstance() *GinViewer {
 	if singleInstance == nil {
 		lock.Lock()
 		defer lock.Unlock()
-		singleInstance = &GinUser{}
+		singleInstance = &GinViewer{}
 	}
 
 	return singleInstance
 }
 
-func SetControllerInstance(userController *GinUser) {
+func SetViewerControllerInstance(userController *GinViewer) {
 	if singleInstance == nil {
 		lock.Lock()
 		defer lock.Unlock()
