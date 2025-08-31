@@ -2,10 +2,17 @@
     <div id="contents" hx-swap-oob="#contents">
         <h2>Page Viewer</h2>
         <hr>
-        <div class="text-start w-50" id="documents">
+        <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center">
+            <button style="width: 30px; height: 30px;">-</button>
+            <span>1</span>
+            <button style="width: 30px; height: 30px;">+</button>
+        </div>
+        <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" id="documents">
             {{range .Images}}
-                <img width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{.}}">
+                <img class="viewerImage" width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{.}}">
             {{end}}
         </div>
+        
+        <script src="/js/zoom.js"></script>
     </div>
 {{end}}
