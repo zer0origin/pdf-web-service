@@ -7,11 +7,14 @@
             <button onclick="zoomModule.increaseZoom()" style="width: 30px; height: 30px;">+</button>
         </div>
         <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" id="documents">
-            {{range .Images}}
-                <img class="viewerImage" width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{.}}">
+            {{range $index, $element := .Images}}
+                <div id="selection-{{$index}}" class="border border-1">
+                    <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage" width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{$element}}">
+                </div>
             {{end}}
         </div>
 
         <script src="/js/zoom.js"></script>
+        <script src="/js/selections.js"></script>
     </div>
 {{end}}
