@@ -58,6 +58,17 @@ const selectionsModule = (function() {
         return rec
     }
 
+    /**
+     * Spawn a new point on the screen
+     * @param p {Point}
+     * @param element {HTMLElement}
+     */
+    function spawnPoint(p, element){
+        let temp = document.getElementsByTagName("template")[0]
+        let node = document.importNode(temp.content.querySelector("div"))
+        element.appendChild(node)
+    }
+
     function spawnSelection(){
 
     }
@@ -85,6 +96,7 @@ const selectionsModule = (function() {
 
         let name = String(event.target.id);
         let key = Number(name.split("-")[1]); //todo: change
+        let selectionArr = `selection-${key}`
         console.log(key)
 
         let present = selectionsMap.has(key)
@@ -119,6 +131,7 @@ const selectionsModule = (function() {
     return {
         getPosition: getPositionRelativeToDocument,
         onClick: onClickFunction,
-        selectionsMap: selectionsMap
+        selectionsMap: selectionsMap,
+        spawnPoint: spawnPoint,
     };
 })()
