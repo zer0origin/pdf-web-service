@@ -118,7 +118,9 @@ class Rectangle {
         let exitControls = node.querySelector(".exit-controls")
 
         exitControls.onclick = () => {
-            alert(this.id)
+            let name = String(this.imageDiv.id);
+            let key = Number(name.split("-")[1]); //todo: change
+            selectionsModule.deleteSelection(key, this.id)
         }
 
         this.spawnDiv.appendChild(node)
@@ -235,12 +237,12 @@ const selectionsModule = (function () {
     }
 
     return {
-        selectionsMap: selectionsMap,
+        map: selectionsMap,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
         refreshSelectionNodes: refreshSelectionNodes,
     };
 })()
 
-window.addEventListener("resize", selectionsModule.refreshSelectionNodes)
-zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes)
+window.addEventListener("resize", selectionsModule.refreshSelectionNodes);
+zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);
