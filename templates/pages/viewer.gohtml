@@ -2,9 +2,9 @@
     <div id="contents" hx-swap-oob="#contents">
         <h2>Page Viewer</h2>
         <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center">
-            <button onclick="zoomModule.decreaseZoom()" style="width: 30px; height: 30px;">-</button>
+            <button class="btn border border-1 text-center p-1" onclick="zoomModule.decreaseZoom()" style="width: 30px; height: 30px;">-</button>
             <span id="zoom-info">1</span>
-            <button onclick="zoomModule.increaseZoom()" style="width: 30px; height: 30px;">+</button>
+            <button class="btn border border-1 text-center p-1" onclick="zoomModule.increaseZoom()" style="width: 30px; height: 30px;">+</button>
         </div>
         <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" id="documents">
             {{range $index, $element := .Images}}
@@ -19,7 +19,11 @@
         </template>
 
         <template id="rectangle-template">
-            <div class="rectangle position-absolute border border-1" style="border-color: #ff0000!important;"></div>
+            <div class="rectangle position-absolute border border-1" style="border-color: #ff0000!important;">
+                <div class="text-start position-absolute d-flex" style="top: -3px; left: 1px;">
+                    <span class="exit-controls text-start btn p-0" style="font-size: 10px; color: rgba(0,0,0,0.5); z-index: 10;">X</span>
+                </div>
+            </div>
         </template>
 
         <script src="/js/zoom.js"></script>

@@ -1,3 +1,9 @@
+Array.prototype.remove = function(from, to) {
+    var rest = this.slice((to || from) + 1 || this.length);
+    this.length = from < 0 ? this.length + from : from;
+    return this.push.apply(this, rest);
+};
+
 class Point{
     x;
     y;
@@ -5,13 +11,23 @@ class Point{
         this.x = x;
         this.y = y;
     }
+
+    static getPositionRelativeToDocument(element) {
+        const clientRect = element.getBoundingClientRect();
+        return {
+            left: clientRect.left + window.pageXOffset,
+            top: clientRect.top + window.pageYOffset
+        };
+    }
 }
 
 class Rectangle{
+    static lastId = 0
     p1;
     p2;
     spawnDiv;
-    position;
+    imageDiv;
+    id;
 
     /**
      * @type {[HTMLElement]}
@@ -23,9 +39,12 @@ class Rectangle{
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, position) {
+    constructor(spawnDiv, imageDiv) {
         this.spawnDiv = spawnDiv;
-        this.position = position;
+        this.imageDiv = imageDiv;
+        console.log("BEFORE: " + Rectangle.lastId)
+        this.id = Rectangle.lastId++;
+        console.log("AFTER: " + Rectangle.lastId)
     }
 
     /**
@@ -37,10 +56,9 @@ class Rectangle{
     #spawnPoint(p, element, position){
         let size = 5;
         let temp = document.getElementById("point-template")
-        let node = document.importNode(temp.content.querySelector("div"))
+        let node = document.importNode(temp.content.querySelector("div"), true)
         element.appendChild(node)
         this.nodes.push(node)
-        console.log(this.nodes)
 
         node.style.width = `${size}px`;
         node.style.height = `${size}px`;
@@ -52,14 +70,14 @@ class Rectangle{
      * Spawn a new point on the screen
      */
     spawnP1(){
-        this.#spawnPoint(this.p1, this.spawnDiv, this.position)
+        this.#spawnPoint(this.p1, this.spawnDiv, Point.getPositionRelativeToDocument(this.imageDiv));
     }
 
     /**
      * Spawn a new point on the screen
      */
     spawnP2(){
-        this.#spawnPoint(this.p2, this.spawnDiv, this.position)
+        this.#spawnPoint(this.p2, this.spawnDiv, Point.getPositionRelativeToDocument(this.imageDiv));
     }
 
     /**
@@ -72,17 +90,19 @@ class Rectangle{
         }
     }
 
+    clearSpawnedRectangle(){
+        if (this.rectangleDiv){
+            this.rectangleDiv.remove()
+        }
+    }
+
     /**
      * Spawn a new point on the screen
-     * @param spawnDiv {HTMLElement}
-     * @param position {{left: number, top: number}}
      */
-    spawnRectangle(spawnDiv, position){
+    spawnRectangle(){
         let temp = document.getElementById("rectangle-template")
-        let node = document.importNode(temp.content.querySelector("div"))
-        spawnDiv.appendChild(node)
+        let node = document.importNode(temp.content.querySelector("div"), true)
         this.rectangleDiv = node
-        console.log(this.rectangleDiv)
 
         let points = this.#getPointsAsUpperLeftAndLowerRight(this.p1, this.p2)
         let width = points.p2.x - points.p1.x
@@ -90,8 +110,17 @@ class Rectangle{
 
         node.style.width = `${width}px`;
         node.style.height = `${height}px`;
+        let position = Point.getPositionRelativeToDocument(this.imageDiv);
         node.style.top = `${position.top + points.p1.y}px`
         node.style.left = `${position.left + points.p1.x}px`
+
+        let exitControls = node.querySelector(".exit-controls")
+
+        exitControls.onclick = () => {
+            alert(this.id)
+        }
+
+        this.spawnDiv.appendChild(node)
     }
 
     /**
@@ -109,12 +138,12 @@ class Rectangle{
         let upperLeft = new Point(midX - diffX, midY - diffY)
         let lowerRight = new Point(midX + diffX, midY + diffY)
 
+        return {p1: upperLeft, p2:lowerRight}
+    }
 
-        let rec = new Rectangle();
-        rec.p1 = upperLeft;
-        rec.p2 = lowerRight;
-
-        return rec
+    clearSpawnedNodes(){
+        this.clearSpawnedPoints();
+        this.clearSpawnedRectangle();
     }
 }
 
@@ -126,19 +155,6 @@ const selectionsModule = (function() {
     let selectionsMap = new Map();
 
     /**
-     *
-     * @param {HTMLElement} element
-     * @returns {{left: number, top: number}}
-     */
-    function getPositionRelativeToDocument(element) {
-        const clientRect = element.getBoundingClientRect();
-        return {
-            left: clientRect.left + window.pageXOffset,
-            top: clientRect.top + window.pageYOffset
-        };
-    }
-
-    /**
      * Handle click events for selections.
      * @param {MouseEvent} event - The mouse event object.
      */
@@ -146,7 +162,7 @@ const selectionsModule = (function() {
         const cursorX = event.pageX; //get cursorX relative to whole page.
         const cursorY = event.pageY; //get cursorY relative to whole page.
 
-        let imagePos = getPositionRelativeToDocument(event.target)
+        let imagePos = Point.getPositionRelativeToDocument(event.target)
         let zoomLevel = zoomModule.getZoomLevel();
         const imageCoordsRelativeToSelf = new Point((cursorX - imagePos.left) / zoomLevel, (cursorY - imagePos.top) / zoomLevel)
 
@@ -170,7 +186,7 @@ const selectionsModule = (function() {
         let recArr = selectionsMap.get(key);
 
         if (recArr.length <= 0){
-            let rec = new Rectangle(document.getElementById(selectionArr), getPositionRelativeToDocument(event.target));
+            let rec = new Rectangle(document.getElementById(selectionArr), event.target);
             rec.p1 = imageCoordsRelativeToSelf;
             recArr.push(rec)
             rec.spawnP1()
@@ -181,21 +197,46 @@ const selectionsModule = (function() {
         if (recData.p2 === undefined){
             recData.p2 = imageCoordsRelativeToSelf;
             recData.spawnP2()
-            // recData.clearSpawnedPoints();
-            recData.spawnRectangle(document.getElementById(selectionArr), getPositionRelativeToDocument(event.target))
-            return;
+            recData.clearSpawnedPoints();
+            recData.spawnRectangle()
         }else{
-            let rec = new Rectangle(document.getElementById(selectionArr), getPositionRelativeToDocument(event.target));
+            let rec = new Rectangle(document.getElementById(selectionArr), event.target);
             rec.p1 = imageCoordsRelativeToSelf;
             recArr.push(rec)
             rec.spawnP1()
-            return;
+        }
+    }
+
+    function deleteSelection(key, id) {
+        let rectangles = selectionsMap.get(key);
+
+        for (let i = 0; i < rectangles.length; i++) {
+            let rec = rectangles[i];
+            if (rec.id === id){
+                rec.clearSpawnedNodes()
+                rectangles.remove(i)
+            }
+        }
+    }
+
+    function refreshSelectionNodes(){
+        for (let i = 0; i < selectionsMap.size; i++) {
+            let recArr = selectionsMap.get(i);
+
+            for (let j = 0; j < recArr.length; j++) {
+                let rec = recArr[j];
+                rec.clearSpawnedNodes();
+                rec.spawnRectangle()
+            }
         }
     }
 
     return {
-        getPosition: getPositionRelativeToDocument,
-        onClick: onClickFunction,
         selectionsMap: selectionsMap,
+        onClick: onClickFunction,
+        deleteSelection: deleteSelection,
+        refreshSelectionNodes: refreshSelectionNodes,
     };
 })()
+
+window.addEventListener("resize", selectionsModule.refreshSelectionNodes)
