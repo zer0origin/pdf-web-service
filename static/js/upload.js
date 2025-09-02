@@ -70,6 +70,7 @@ async function htmxConfirmEvent(event) {
     try {
         window.tempData = await toBase64(fileData)
         event.detail.issueRequest();
+        reset();
     } catch (error) {
         console.error("Error preparing file for upload:", error);
     }
