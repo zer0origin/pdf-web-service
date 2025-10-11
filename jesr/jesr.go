@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"pdf_service_web/models"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Api struct {
@@ -154,6 +155,8 @@ func (t Api) AddMeta(request AddMetaRequest) error {
 	return nil
 }
 
+var GetMetaNotFoundError = errors.New("user meta data not found")
+
 func (t Api) GetMeta(documentUid, ownerUid string) (models.Meta, error) {
 	url := fmt.Sprintf("%s/api/v1/meta/?documentUUID=%s&ownerUUID=%s", t.BaseUrl, documentUid, ownerUid)
 	method := "GET"
@@ -175,7 +178,13 @@ func (t Api) GetMeta(documentUid, ownerUid string) (models.Meta, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return models.Meta{}, fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
+		switch res.StatusCode {
+		case http.StatusNotFound:
+			return models.Meta{}, GetMetaNotFoundError
+
+		default:
+			return models.Meta{}, fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
+		}
 	}
 
 	data := &models.Meta{}

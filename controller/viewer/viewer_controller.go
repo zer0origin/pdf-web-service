@@ -1,11 +1,14 @@
 package viewer
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"errors"
+	"fmt"
 	"net/http"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type GinViewer struct {
@@ -35,6 +38,21 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 
 	meta, err := t.JesrApi.GetMeta(documentUid, ownerUid)
 	if err != nil {
+		if errors.Is(err, jesr.GetMetaNotFoundError) {
+			fmt.Println("User meta data not found. Creating now!")
+			err := t.JesrApi.AddMeta(jesr.AddMetaRequest{
+				DocumentUUID: uuid.MustParse(documentUid),
+				OwnerUUID:    uuid.MustParse(ownerUid),
+			})
+			if err != nil {
+				fmt.Println("Failed to create user meta")
+			} else {
+				fmt.Println("Successfully created user meta")
+				t.GetViewer(c)
+				return
+			}
+		}
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve document meta"})
 		return
 	}
