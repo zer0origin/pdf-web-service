@@ -19,6 +19,8 @@ services:
   data:
     image: pdf_service_data:0.0.6
     container_name: pdf_service_data
+    environment:
+      DOCUMENT_DPI: 120
     ports:
       - "8083:8080"
 
