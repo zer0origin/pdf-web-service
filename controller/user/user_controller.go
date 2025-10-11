@@ -3,14 +3,16 @@ package user
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"log"
 	"net/http"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
 	"pdf_service_web/models"
 	"pdf_service_web/service/NotificationService"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type GinUser struct {
@@ -84,11 +86,17 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	}
 
 	subject, _ := token.Claims.GetSubject()
-	documentsOwnerByUser, _ := t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+	documentsOwnerByUser, err := t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+	if err != nil {
+		log.Printf("failed to connect to database: %v", err.Error())
+	}
 
 	if offset != 0 && len(documentsOwnerByUser) == 0 {
 		offset = 0
-		documentsOwnerByUser, _ = t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+		documentsOwnerByUser, err = t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
+		if err != nil {
+			log.Printf("failed to connect to database: %v", err.Error())
+		}
 	}
 
 	data := models.PageDefaults{

@@ -19,9 +19,16 @@
         </template>
 
         <template id="rectangle-template">
-            <div class="rectangle position-absolute border border-1" style="border-color: #ff0000!important;">
-                <div class="text-start position-absolute d-flex" style="top: -3px; left: 1px;">
+            <div class="rectangle position-absolute border border-1 d-flex flex-column justify-content-end">
+                <div class="selection-controls text-start position-absolute d-flex" style="top: -3px; left: 1px;">
                     <span class="exit-controls text-start btn p-0" style="font-size: 10px; color: rgba(0,0,0,0.5); z-index: 10;">X</span>
+                </div>
+                <div class="d-flex flex-row justify-content-end" style="height: 100%">
+                    <div style="width: 10px; height: 10px; background-color: red;"></div>
+                </div>
+                <div class="d-flex flex-row justify-content-between">
+                    <div style="width: 10px; height: 10px; background-color: red;"></div>
+                    <div style="width: 10px; height: 10px; background-color: red;"></div>
                 </div>
             </div>
         </template>

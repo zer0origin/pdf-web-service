@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"pdf_service_web/controller"
@@ -12,6 +11,8 @@ import (
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
 	"pdf_service_web/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {

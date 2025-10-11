@@ -178,16 +178,15 @@ const selectionsModule = (function () {
         }
 
         let name = String(event.target.id);
-        let key = Number(name.split("-")[1]); //todo: change
-        let selectionArr = `selection-${key}`
+        let pageNumber = Number(name.split("-")[1]); //todo: change
+        let selectionArr = `selection-${pageNumber}`
 
-        let present = selectionsMap.has(key)
+        let present = selectionsMap.has(pageNumber)
         if (!present) {
-            selectionsMap.set(key, [])
+            selectionsMap.set(pageNumber, [])
         }
 
-        let recArr = selectionsMap.get(key);
-
+        let recArr = selectionsMap.get(pageNumber);
         if (recArr.length <= 0) {
             let rec = new Rectangle(document.getElementById(selectionArr), event.target);
             rec.p1 = imageCoordsRelativeToSelf;
