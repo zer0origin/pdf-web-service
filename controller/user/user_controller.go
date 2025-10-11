@@ -242,13 +242,13 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
-		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = \"/\"</script>"))
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("event: refresh\ndata: %s\n\n", "Token Rejected"))
 		return
 	}
 
 	token, err := t.KeycloakApi.AuthenticateJwtToken(cookie.Value)
 	if err != nil {
-		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("data: %s\n\n", "<script>window.location.href = \"/\"</script>"))
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("event: refresh\ndata: %s\n\n", "Token Rejected"))
 		return
 	}
 

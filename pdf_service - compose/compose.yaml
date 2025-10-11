@@ -48,7 +48,7 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_LOG_LEVEL: info
     healthcheck:
-      test: [ "CMD", "curl", "--head", "-fsS", "http://localhost:9000/health/ready"]
+      test: [ "CMD", "curl", "--head", "-fsS", "http://localhost:9000/health/ready" ]
       interval: 10s
       timeout: 5s
       retries: 15
