@@ -1,4 +1,4 @@
-const zoomModule = (function() {
+var zoomModule = (function() {
     let currentZoomLevel = 1;
     const images = document.getElementsByClassName("viewerImage");
     let defaultWidth = Number(images.item(0).width);

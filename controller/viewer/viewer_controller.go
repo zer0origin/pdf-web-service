@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+	"pdf_service_web/service/NotificationService"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -40,14 +41,18 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, jesr.GetMetaNotFoundError) {
 			fmt.Println("User meta data not found. Creating now!")
+			_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "User meta data not found! Attempting to create that now.") //TODO Error method!
+
 			err := t.JesrApi.AddMeta(jesr.AddMetaRequest{
 				DocumentUUID: uuid.MustParse(documentUid),
 				OwnerUUID:    uuid.MustParse(ownerUid),
 			})
 			if err != nil {
 				fmt.Println("Failed to create user meta")
+				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Failed to create user meta.") //TODO Error method!
 			} else {
-				fmt.Println("Successfully created user meta")
+				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Successfully created user meta.") //TODO Error method!
+
 				t.GetViewer(c)
 				return
 			}
