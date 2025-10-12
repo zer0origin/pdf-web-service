@@ -4,7 +4,7 @@
 
         <div hx-get="/user/" hx-trigger="sse:DocumentUpload"></div>
         <div hx-trigger="sse:message"></div>
-C        <div hx-trigger="sse:refresh"></div>
+        <div hx-trigger="sse:refresh"></div>
 
         <script>
             document.body.addEventListener('htmx:sseMessage', function (e) {
