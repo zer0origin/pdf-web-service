@@ -38,18 +38,51 @@
 {{/*                    </li>*/}}
                 </ul>
 
-                <div class="d-flex flex-row" >
-{{/*                    <form class="d-flex" role="search">*/}}
-{{/*                        <input id="search-bar" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">*/}}
-{{/*                        <button class="btn btn-outline-success" type="submit">Search</button>*/}}
-{{/*                    </form>*/}}
+                <div class="d-flex flex-row gap-3">
+                    {{/*                    <form class="d-flex" role="search">*/}}
+                    {{/*                        <input id="search-bar" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">*/}}
+                    {{/*                        <button class="btn btn-outline-success" type="submit">Search</button>*/}}
+                    {{/*                    </form>*/}}
 
                     {{if .}}
                         {{if .IsAuthenticated}}
-                            <a class="btn btn-outline-success" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
+                            <a id="refresh-toggle" class="btn btn-outline-success" onclick="toggleAutomaticRefresh()">Auto Refresh</a>
+                            <a id="notification-toggle" class="btn btn-outline-success" onclick="toggleNotif()">Notifications</a>
+                            <a class="btn btn-outline-light" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
                         {{end}}
                     {{end}}
                 </div>
+
+                <script>
+                    window.notificationToggle = true
+                    window.refreshToggle = true
+
+                    function toggleNotif(){
+                        if(window.notificationToggle){
+                            window.notificationToggle = false
+                            document.getElementById("notification-toggle").classList.remove("btn-outline-success")
+                            document.getElementById("notification-toggle").classList.add("btn-outline-secondary")
+                            return
+                        }
+
+                        window.notificationToggle = true
+                        document.getElementById("notification-toggle").classList.add("btn-outline-success")
+                        document.getElementById("notification-toggle").classList.remove("btn-outline-secondary")
+                    }
+
+                    function toggleAutomaticRefresh(){
+                        if(window.refreshToggle){
+                            window.refreshToggle = false
+                            document.getElementById("refresh-toggle").classList.remove("btn-outline-success")
+                            document.getElementById("refresh-toggle").classList.add("btn-outline-secondary")
+                            return
+                        }
+
+                        window.refreshToggle = true
+                        document.getElementById("refresh-toggle").classList.add("btn-outline-success")
+                        document.getElementById("refresh-toggle").classList.remove("btn-outline-secondary")
+                    }
+                </script>
             </div>
         </div>
     </nav>
