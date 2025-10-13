@@ -35,7 +35,7 @@ func (t *NotificationDispatcher) GetOrCreateNotificationChannel(uid string) (*No
 	if !ok {
 		notifChannel := &NotificationChannel{Channel: make(chan string, 1), ConnectedClients: 1}
 		t.UserNotifications[uid] = notifChannel
-		fmt.Println("[NotificationService] Created new channel for uid " + uid)
+		fmt.Println("[NotificationService] Created new channel for user " + uid)
 		return notifChannel, nil
 	}
 
