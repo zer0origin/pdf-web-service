@@ -70,3 +70,5 @@ var zoomModule = (function() {
         registerZoomChange: registerZoomChange,
     };
 })();
+
+document.dispatchEvent(new Event("zoomModuleLoaded"))
