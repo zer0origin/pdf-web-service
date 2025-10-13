@@ -41,7 +41,7 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, jesr.GetMetaNotFoundError) {
 			fmt.Println("User meta data not found. Creating now!")
-			_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "User meta data not found! Attempting to create that now.") //TODO Error method!
+			_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "User meta data not found! Attempting to create that now.")
 
 			err := t.JesrApi.AddMeta(jesr.AddMetaRequest{
 				DocumentUUID: uuid.MustParse(documentUid),
@@ -49,9 +49,9 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 			})
 			if err != nil {
 				fmt.Println("Failed to create user meta")
-				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Failed to create user meta.") //TODO Error method!
+				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Failed to create user meta.")
 			} else {
-				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Successfully created user meta.") //TODO Error method!
+				_ = NotificationService.GetServiceInstance().SendMessage(ownerUid, "Successfully created user meta.")
 
 				t.GetViewer(c)
 				return

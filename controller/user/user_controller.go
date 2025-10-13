@@ -160,6 +160,7 @@ func (t GinUser) Upload(c *gin.Context) {
 
 		results := make(chan error)
 		go func() {
+			_ = NotificationService.GetServiceInstance().SendMessage(subject, "Uploading document!")
 			docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
 			if err != nil {
 				results <- err
@@ -185,6 +186,7 @@ func (t GinUser) Upload(c *gin.Context) {
 				return
 			}
 
+			_ = instance.SendMessage(subject, "Finished uploading document.")
 			_ = instance.SendEvent(subject, "DocumentUpload", "Success")
 		}
 
@@ -215,6 +217,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 
 	resultsChannel := make(chan error)
 	go func() {
+		_ = NotificationService.GetServiceInstance().SendMessage(ownerUuidStr, "Deleting document")
 		resultsChannel <- t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
 	}()
 
@@ -222,7 +225,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	case err = <-resultsChannel:
 		instance := NotificationService.GetServiceInstance()
 		if err != nil {
-			_ = instance.SendEvent(ownerUuidStr, "DocumentDeleted", err.Error())
+			_ = NotificationService.GetServiceInstance().SendEvent(ownerUuidStr, "errorNotif", "Failed to delete document!")
 		}
 
 		_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", "Success")
