@@ -18,9 +18,11 @@ The `pdf-web-service` acts as the frontend layer of the PDF platform. It delegat
 Client (Browser)
 │
 ▼
-pdf-web-service (UI Layer)
+pdf-web-service (UI Layer, Toast Notification, Web API)
 │
-├──▶ pdf-api-service (PDF logic)
+├──▶ pdf-api-service (Backend logic)
+│    ├──▶ Keycloak (User Management)
+│    └──▶ Postgres (Data Storage)
 └──▶ pdf-data-service (Data layer)
 ```
 
