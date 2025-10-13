@@ -38,7 +38,7 @@
 
                             <div class="d-flex gap-2">
                                 <a class="btn btn-sm btn-secondary" hx-get="/viewer/documents/{{.DocumentUUID}}">View</a>
-                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-trigger="click" hx-target="#document-{{.DocumentUUID}}" hx-delete="/user/documents/{{.DocumentUUID}}">Delete</a>
+                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-swap="none" hx-trigger="click" hx-target="#document-{{.DocumentUUID}}" hx-delete="/user/documents/{{.DocumentUUID}}">Delete</a>
                             </div>
                             <hr>
                         </div>
@@ -73,7 +73,7 @@
             <span class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"
                   id="drop-zone-text"> Drag and drop pdf file here</span>
         </div>
-        <a id="customUploadButton" hx-swap="outerHTML" hx-target="#documents"
+        <a id="customUploadButton" hx-swap="outerHTML" hx-swap-oob="none" hx-target="#documents"
            hx-on::before-Request="shouldSendRequest(event)" hx-on::config-Request="htmxUploadContents(event)"
            hx-on::confirm="htmxConfirmEvent(event)" hx-post="/user/upload"
            class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px">Upload files</a>
