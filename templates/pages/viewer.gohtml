@@ -1,50 +1,17 @@
 {{block "viewer" . }}
     <div id="contents" hx-swap-oob="#contents">
-
-        <div class="d-flex flex-column align-items-center gap-1" style="top: 0px">
-            <h2 class="text-center">Page Viewer</h2>
-            <div id="control-centre"
-                 class="d-flex flex-column align-items-center gap-1 border border-1 position-sticky top-0 p-1 z-3 rounded rounded-3"
-                 style="min-width: 300px; min-height: 75px; background-color: white">
-                <div class="p-0 m-0 d-flex flex-row align-items-center w-100">
-                    <div class="d-flex flex-column align-items-center w-100 p-2">
-                        <a>Page</a>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary">Extract</button>
-                            <button class="btn btn-secondary">Save</button>
-                            <button class="btn btn-secondary">Load</button>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 p-2">
-                        <a>Selection</a>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary">Clear</button>
-                            <div class="d-flex flex-row gap-1">
-                                <button class="btn btn-secondary" onclick="selectionsModule.replicateSelection()">Replicate</button>
-                                    <input id="replicate-page" style="width: 30px;" type="text" value="1">
-                            </div>
-                        </div>
-                    </div>
+        <h2>Page Viewer</h2>
+        <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center">
+            <button class="btn border border-1 text-center p-1" onclick="zoomModule.decreaseZoom()" style="width: 30px; height: 30px;">-</button>
+            <span id="zoom-info">1</span>
+            <button class="btn border border-1 text-center p-1" onclick="zoomModule.increaseZoom()" style="width: 30px; height: 30px;">+</button>
+        </div>
+        <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" id="documents">
+            {{range $index, $element := .Images}}
+                <div id="selection-{{$index}}" class="border border-1">
+                    <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage" width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{$element}}">
                 </div>
-            </div>
-            <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center">
-                <button class="btn border border-1 text-center p-1" onclick="zoomModule.decreaseZoom()"
-                        style="width: 25px; height: 25px;">-
-                </button>
-                <span id="zoom-info">1</span>
-                <button class="btn border border-1 text-center p-1" onclick="zoomModule.increaseZoom()"
-                        style="width: 25px; height: 25px;">+
-                </button>
-            </div>
-
-            <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" number-of-pages="{{.NumberOfPages}}" id="documents">
-                {{range $index, $element := .Images}}
-                    <div id="selection-{{$index}}" page="{{$index}}" class="border border-1">
-                        <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage"
-                             width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{$element}}">
-                    </div>
-                {{end}}
-            </div>
+            {{end}}
         </div>
 
         <template id="point-template">
@@ -54,12 +21,11 @@
         <template id="rectangle-template">
             <div class="rectangle position-absolute border border-1 d-flex flex-column justify-content-end">
                 <div class="selection-controls text-start position-absolute d-flex" style="top: -3px; left: 1px;">
-                    <span class="exit-controls text-start btn p-0"
-                          style="font-size: 10px; color: rgba(0,0,0,0.5);">X</span>
+                    <span class="exit-controls text-start btn p-0" style="font-size: 10px; color: rgba(0,0,0,0.5); z-index: 10;">X</span>
                 </div>
                 <div class="d-flex flex-row justify-content-end" style="height: 100%">
                     <div style="width: 10px; height: 10px; background-color: red;"></div>
-                </div>
+                </div>  
                 <div class="d-flex flex-row justify-content-between">
                     <div style="width: 10px; height: 10px; background-color: red;"></div>
                     <div style="width: 10px; height: 10px; background-color: red;"></div>

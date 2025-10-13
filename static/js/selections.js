@@ -14,10 +14,6 @@ var selectionsModule = (function () {
             this.y = y;
         }
 
-        copy() {
-            return new Point(this.x, this.y)
-        }
-
         static getPositionRelativeToDocument(element) {
             const clientRect = element.getBoundingClientRect();
             return {
@@ -48,7 +44,9 @@ var selectionsModule = (function () {
         constructor(spawnDiv, imageDiv) {
             this.spawnDiv = spawnDiv;
             this.imageDiv = imageDiv;
+            console.log("BEFORE: " + Rectangle.lastId)
             this.id = Rectangle.lastId++;
+            console.log("AFTER: " + Rectangle.lastId)
         }
 
         /**
@@ -110,7 +108,7 @@ var selectionsModule = (function () {
 
             let points = this.#getPointsAsUpperLeftAndLowerRight(this.p1, this.p2)
             let width = (points.p2.x - points.p1.x) * zoomModule.getZoomLevel()
-            let height = (points.p2.y - points.p1.y) * zoomModule.getZoomLevel()
+            let height = (points.p2.y - points.p1.y)  * zoomModule.getZoomLevel()
 
             node.style.width = `${width}px`;
             node.style.height = `${height}px`;
@@ -224,10 +222,6 @@ var selectionsModule = (function () {
     }
 
     function refreshSelectionNodes() {
-        if (selectionsMap.size <= 0) {
-            return
-        }
-
         for (let i = 0; i < selectionsMap.size; i++) {
             let recArr = selectionsMap.get(i);
 
@@ -237,57 +231,17 @@ var selectionsModule = (function () {
                 rec.spawnRectangle()
             }
         }
-    }
 
-    function replicateSelection() {
-        let total = Number(document.getElementById("documents").getAttribute("number-of-pages"))
-        let replicateFrom = Number(document.getElementById("replicate-page").value) - 1
-        let dataToReplicate = selectionsMap.get(replicateFrom);
-
-        if (!dataToReplicate || dataToReplicate.length <= 0) {
-            return
-        }
-
-        for (let i = 0; i < total; i++) {
-            if (i === replicateFrom) {
-                continue
-            }
-
-            let spawnDiv = document.getElementById(`selection-${i}`)
-            let imageDiv = document.getElementById(`image-${i}`)
-            let recArr = []
-
-            dataToReplicate.forEach(value => {
-                let recData = new Rectangle(spawnDiv, imageDiv)
-                recData.p1 = value.p1.copy()
-                recData.p2 = value.p2.copy()
-                recData.spawnRectangle()
-
-                recArr.push(recData)
-            })
-
-            selectionsMap.set(i, recArr)
-        }
-
-        refreshSelectionNodes()
+        console.log("refreshed viewer!")
     }
 
     return {
-        map: selectionsMap, //For Debug
+        map: selectionsMap,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
         refreshSelectionNodes: refreshSelectionNodes,
-        replicateSelection: replicateSelection,
     };
 })()
 
 window.addEventListener("resize", selectionsModule.refreshSelectionNodes);
-
-if (window.zoomModule){
-    zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);
-}else{
-    window.addEventListener("zoomModuleLoaded", () => {
-        console.log("Event Fired!")
-        zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);
-    })
-}
+zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);
