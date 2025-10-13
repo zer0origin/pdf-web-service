@@ -1,6 +1,6 @@
 :root {
-    --accent-900: #49a87d;
-    --accent-800: #1b945b;
+    /*--accent-900: #49a87d;*/
+    /*--accent-800: #da5f5f;*/
     --check-svg: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24' fill='%23ffffff'%3E%3Cpath d='M400-314.46 250.46-464 296-509.54l104 104 264-264L709.54-624 400-314.46Z'/%3E%3C/svg%3E");
     --notification-inset: 0.5rem;
     font-family: system-ui;
@@ -8,6 +8,14 @@
 
 *, :after, :before {
     box-sizing: inherit;
+}
+
+.message {
+    --accent-900: #49a87d;
+}
+
+.error {
+    --accent-900: #da5f5f;
 }
 
 .notification h2 {

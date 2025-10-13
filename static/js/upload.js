@@ -44,7 +44,7 @@ function htmxUploadContents(event) {
         return;
     }
 
-    if (fileData.type !== "application/pdf"){ //TODO: WARNING EITHER CLIENT SIZE OR JS SIDE.
+    if (fileData.type !== "application/pdf"){
         reset()
     }
 

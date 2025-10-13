@@ -1,25 +1,42 @@
 {{block "notifications" . }}
     <div id="sse" hx-ext="sse" sse-connect="/user/events">
+        {{/*Force refresh to avoid upload page bug*/}}
         <div hx-get="/user/" hx-trigger="sse:DocumentDelete"></div>
-
         <div hx-get="/user/" hx-trigger="sse:DocumentUpload"></div>
         <div hx-trigger="sse:message"></div>
+        <div hx-trigger="sse:error"></div>
         <div hx-trigger="sse:refresh"></div>
 
         <script>
+            function checkRefresh(event) {
+                if (!window.refreshToggle) {
+                    event.preventDefault()
+                }
+            }
+
             document.body.addEventListener('htmx:sseMessage', function (e) {
                 console.log("Message received from notification system!")
+                console.log(e)
                 let messageEvnt = e.detail
                 let typeEvnt = messageEvnt.type
 
-                if (String(typeEvnt).toLowerCase() === "message") {
-                    console.log(e.detail.data)
-                    console.log(e.detail.type)
+                if (window.notificationToggle) {
+                    if (String(typeEvnt).toLowerCase() === "message") {
+                        console.log(e.detail.data)
+                        console.log(e.detail.type)
 
-                    notificationsModule.create("System Message", messageEvnt.data)
+                        notificationsModule.create("System Message", messageEvnt.data)
+                    }
+
+                    if (String(typeEvnt).toLowerCase() === "errorNotif") {
+                        console.log(e.detail.data)
+                        console.log(e.detail.type)
+
+                        notificationsModule.createError("Error", messageEvnt.data)
+                    }
                 }
 
-                if (String(typeEvnt).toLowerCase() === "refresh"){
+                if (String(typeEvnt).toLowerCase() === "refresh") {
                     window.location.reload(true);
                 }
             })
@@ -40,19 +57,25 @@
         </div>
 
         <template id="notification-template">
-            <div id="notification" class="notification" role="alert" aria-live="assertive" aria-atomic="true" closedby="anny" hidden>
+            <div id="notification" class="notification" role="alert" aria-live="assertive" aria-atomic="true"
+                 closedby="anny" hidden>
                 <div class="d-flex flex-row gap-4">
                     <div class="notification__icon">
-                        <svg width="64px" height="64x" viewBox="0 0 125 125" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="64px" height="64x" viewBox="0 0 125 125" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
                             <rect x="14" y="14" width="97" height="97" fill="white"/>
                             <mask id="path-2-inside-1" fill="white">
                                 <rect x="22" y="35" width="82" height="55" rx="2"/>
                             </mask>
-                            <rect x="22" y="35" width="82" height="55" rx="2" stroke="#3F3F3F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" mask="url(#path-2-inside-1)"/>
-                            <path d="M64.3093 68.8661C63.5578 69.517 62.4422 69.517 61.6907 68.8661L29.8161 41.2619C28.4162 40.0496 29.2736 37.75 31.1254 37.75L94.8747 37.75C96.7264 37.75 97.5838 40.0496 96.1839 41.2619L64.3093 68.8661Z" fill="url(#paint0_linear)"/>
-                            <path d="M36 47L63.5 70L91 47" stroke="#3F3F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="22" y="35" width="82" height="55" rx="2" stroke="#3F3F3F" stroke-width="6"
+                                  stroke-linecap="round" stroke-linejoin="round" mask="url(#path-2-inside-1)"/>
+                            <path d="M64.3093 68.8661C63.5578 69.517 62.4422 69.517 61.6907 68.8661L29.8161 41.2619C28.4162 40.0496 29.2736 37.75 31.1254 37.75L94.8747 37.75C96.7264 37.75 97.5838 40.0496 96.1839 41.2619L64.3093 68.8661Z"
+                                  fill="url(#paint0_linear)"/>
+                            <path d="M36 47L63.5 70L91 47" stroke="#3F3F3F" stroke-width="2" stroke-linecap="round"
+                                  stroke-linejoin="round"/>
                             <defs>
-                                <linearGradient id="paint0_linear" x1="69" y1="87.5" x2="63" y2="38" gradientUnits="userSpaceOnUse">
+                                <linearGradient id="paint0_linear" x1="69" y1="87.5" x2="63" y2="38"
+                                                gradientUnits="userSpaceOnUse">
                                     <stop stop-color="#34F0E5"/>
                                     <stop offset="0.932292" stop-color="#34ECE1" stop-opacity="0"/>
                                 </linearGradient>
