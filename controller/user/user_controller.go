@@ -157,10 +157,16 @@ func (t GinUser) Upload(c *gin.Context) {
 		}
 
 		uploadRequest.OwnerUUID = uuid.MustParse(subject)
+		cookieStr, err := c.Cookie("client_id")
+		if err != nil {
+			fmt.Println("Cookie for user " + subject + " not found")
+		}
+
+		instance := NotificationService.GetServiceInstance()
 
 		results := make(chan error)
 		go func() {
-			_ = NotificationService.GetServiceInstance().SendMessage(subject, "Uploading document!")
+			_ = instance.SendMessage(cookieStr, "Uploading document!")
 			docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
 			if err != nil {
 				results <- err
@@ -179,15 +185,13 @@ func (t GinUser) Upload(c *gin.Context) {
 
 		select {
 		case err = <-results:
-			instance := NotificationService.GetServiceInstance()
 			if err != nil {
 				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
-				_ = instance.SendMessage(subject, "Error uploading document!")
+				_ = instance.SendMessage(cookieStr, "Error uploading document!")
 				return
 			}
 
-			_ = instance.SendMessage(subject, "Finished uploading document.")
-			_ = instance.SendEvent(subject, "DocumentUpload", "Success")
+			_ = instance.SendEvent(cookieStr, "DocumentUpload", "Success")
 		}
 
 		return
@@ -215,9 +219,14 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 		return
 	}
 
+	cookieStr, err := c.Cookie("client_id")
+	if err != nil {
+		fmt.Println("Cookie for user " + ownerUuidStr + " not found")
+	}
+
 	resultsChannel := make(chan error)
 	go func() {
-		_ = NotificationService.GetServiceInstance().SendMessage(ownerUuidStr, "Deleting document")
+		_ = NotificationService.GetServiceInstance().SendMessage(cookieStr, "Deleting document")
 		resultsChannel <- t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
 	}()
 
@@ -225,10 +234,10 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	case err = <-resultsChannel:
 		instance := NotificationService.GetServiceInstance()
 		if err != nil {
-			_ = NotificationService.GetServiceInstance().SendEvent(ownerUuidStr, "errorNotif", "Failed to delete document!")
+			_ = NotificationService.GetServiceInstance().SendEvent(cookieStr, "errorNotif", "Failed to delete document!")
 		}
 
-		_ = instance.SendEvent(ownerUuidStr, "DocumentDelete", "Success")
+		_ = instance.SendEvent(cookieStr, "DocumentDelete", "Success")
 	}
 
 	if err != nil {
@@ -241,6 +250,12 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
+
+	cookieStr, err := c.Cookie("client_id")
+	if err != nil {
+		cookieStr = uuid.NewString()
+		c.SetCookie("client_id", cookieStr, 1*60*24, "/", "", false, false)
+	}
 	c.Writer.Flush()
 
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
@@ -261,10 +276,10 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
-	notificationChannel, err := notificationService.GetOrCreateNotificationChannel(subject)
-	defer notificationService.DeleteNotificationChannel(subject)
+	notificationChannel, err := notificationService.GetOrCreateNotificationChannel(cookieStr)
+	defer notificationService.DeleteNotificationChannel(cookieStr)
 	if err != nil {
-		fmt.Println("Failed to create notification channel for " + subject)
+		fmt.Println("Failed to create notification channel for " + subject + " using " + cookieStr)
 		return
 	}
 
