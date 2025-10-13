@@ -160,6 +160,8 @@ func (t GinUser) Upload(c *gin.Context) {
 		cookieStr, err := c.Cookie("client_id")
 		if err != nil {
 			fmt.Println("Cookie for user " + subject + " not found")
+			c.Redirect(http.StatusFound, "/")
+			return
 		}
 
 		instance := NotificationService.GetServiceInstance()
@@ -222,6 +224,8 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	cookieStr, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUuidStr + " not found")
+		c.Redirect(http.StatusFound, "/")
+		return
 	}
 
 	resultsChannel := make(chan error)
@@ -254,7 +258,7 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	cookieStr, err := c.Cookie("client_id")
 	if err != nil {
 		cookieStr = uuid.NewString()
-		c.SetCookie("client_id", cookieStr, 1*60*24, "/", "", false, false)
+		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
 	}
 	c.Writer.Flush()
 
