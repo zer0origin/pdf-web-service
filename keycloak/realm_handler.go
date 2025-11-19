@@ -19,16 +19,27 @@ type RealmHandler struct {
 	mutex        sync.Mutex
 }
 
+type AuthenticatedUserResponse struct {
+	Uid               string   `json:"sub"`
+	EmailVerified     bool     `json:"email_verified"`
+	Name              string   `json:"name"`
+	PreferredUsername string   `json:"preferred_username"`
+	GivenName         string   `json:"given_name"`
+	FamilyName        string   `json:"family_name"`
+	Email             string   `json:"email"`
+	Organization      []string `json:"organization"`
+}
+
 // SendUserInfoRequest
-// Send a request to the API server, grab the users details from the response and parse the data to keycloak.AuthenticatedUser
-func (t *RealmHandler) SendUserInfoRequest(accessToken string) (AuthenticatedUser, error) {
+// Send a request to the API server, grab the users details from the response and parse the data to keycloak.AuthenticatedUserResponse
+func (t *RealmHandler) SendUserInfoRequest(accessToken string) (AuthenticatedUserResponse, error) {
 	url := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/userinfo", t.BaseUrl, t.RealmName)
 	method := "GET"
 	authHeaderValue := fmt.Sprintf("Bearer %s", accessToken)
 
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		return AuthenticatedUser{}, err
+		return AuthenticatedUserResponse{}, err
 	}
 
 	req.Header.Add("Authorization", authHeaderValue)
@@ -36,12 +47,12 @@ func (t *RealmHandler) SendUserInfoRequest(accessToken string) (AuthenticatedUse
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return AuthenticatedUser{}, err
+		return AuthenticatedUserResponse{}, err
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
-	user := &AuthenticatedUser{}
+	user := &AuthenticatedUserResponse{}
 	err = json.Unmarshal(body, user)
 	return *user, err
 }

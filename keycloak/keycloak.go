@@ -3,13 +3,9 @@ package keycloak
 import (
 	"errors"
 	"fmt"
+
 	"github.com/golang-jwt/jwt/v5"
 )
-
-type UnauthenticatedUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 type TokenResponse struct {
 	AccessToken      string `json:"access_token"`
@@ -23,17 +19,6 @@ type TokenResponse struct {
 	Scope            string `json:"scope"`
 }
 
-type AuthenticatedUser struct {
-	Uid               string   `json:"sub"`
-	EmailVerified     bool     `json:"email_verified"`
-	Name              string   `json:"name"`
-	PreferredUsername string   `json:"preferred_username"`
-	GivenName         string   `json:"given_name"`
-	FamilyName        string   `json:"family_name"`
-	Email             string   `json:"email"`
-	Organization      []string `json:"organization"`
-}
-
 type Api struct {
 	*RealmHandler
 	AdminHandler
@@ -44,6 +29,7 @@ var IdTokenKey = "idToken"
 var RefreshTokenKey = "refreshToken"
 var InvalidToken = errors.New("token was not provided or invalid")
 
+// AuthenticateJwtToken Parse a token after validating its authenticity, if invalid then return a blank token.
 func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 	keyStr, err := t.GetSigningKey()
 	if err != nil {
@@ -66,6 +52,16 @@ func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 	if !withClaims.Valid {
 		return *withClaims, InvalidToken
 	}
-
 	return *withClaims, nil
+}
+
+// ParseTokenUnverified Assume the token is authentic and parse it without checking authenticity.
+func (t Api) ParseTokenUnverified(token string) (jwt.Token, error) {
+	tempClaim := &jwt.RegisteredClaims{}
+	unverified, _, err := jwt.NewParser().ParseUnverified(token, tempClaim)
+	if err != nil {
+		return jwt.Token{}, err
+	}
+
+	return *unverified, nil
 }

@@ -2,11 +2,12 @@ package login
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"pdf_service_web/controller"
 	"pdf_service_web/keycloak"
 	models2 "pdf_service_web/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GinLogin struct {
@@ -39,6 +40,11 @@ func (t GinLogin) LoginRender(c *gin.Context) {
 	return
 }
 
+type UnauthenticatedUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func (t GinLogin) LoginAuthHandler(c *gin.Context) {
 	accept := c.Request.Header["Accept"][0]
 	if accept == "text/html" {
@@ -66,7 +72,7 @@ func (t GinLogin) LoginAuthHandler(c *gin.Context) {
 	}
 
 	if accept == "application/json" || accept == "*/*" {
-		loginInfo := &keycloak.UnauthenticatedUser{}
+		loginInfo := &UnauthenticatedUser{}
 		err := c.ShouldBindJSON(loginInfo)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err)

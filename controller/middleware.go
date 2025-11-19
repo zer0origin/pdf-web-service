@@ -2,9 +2,10 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"pdf_service_web/keycloak"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GinMiddleware struct {
