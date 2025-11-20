@@ -139,7 +139,7 @@ func (t GinUser) Upload(c *gin.Context) {
 			DocumentTitle:        documentTile,
 		}
 
-		token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
+		token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -209,7 +209,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse uid"})
 		return
 	}
-	token, err := t.KeycloakApi.AuthenticateJwtToken(c.GetString(keycloak.AccessTokenKey))
+	token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -255,20 +255,13 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
 
-	cookieStr, err := c.Cookie("client_id")
-	if err != nil {
-		cookieStr = uuid.NewString()
-		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
-	}
-	c.Writer.Flush()
-
 	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
 	if err != nil {
 		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("event: refresh\ndata: %s\n\n", "Token Rejected"))
 		return
 	}
 
-	token, err := t.KeycloakApi.AuthenticateJwtToken(cookie.Value)
+	token, err := t.KeycloakApi.ParseTokenUnverified(cookie.Value)
 	if err != nil {
 		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("event: refresh\ndata: %s\n\n", "Token Rejected"))
 		return
@@ -278,6 +271,15 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	if err != nil {
 		return
 	}
+
+	cookieStr, err := c.Cookie("client_id")
+	if err != nil {
+		nUUID := uuid.NewString()
+		cookieStr = fmt.Sprintf("%s.%s", subject, nUUID[len(nUUID)-12:])
+		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
+		fmt.Println(cookieStr)
+	}
+	c.Writer.Flush()
 
 	notificationService := NotificationService.GetServiceInstance()
 	notificationChannel, err := notificationService.GetOrCreateNotificationChannel(cookieStr)
