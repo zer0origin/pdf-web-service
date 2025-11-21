@@ -193,7 +193,7 @@ func (t GinUser) Upload(c *gin.Context) {
 				return
 			}
 
-			_ = instance.SendEvent(cookieStr, "DocumentUpload", "Success")
+			instance.SendEventToAllInstancesOfUser(cookieStr, "DocumentUpload", "Success")
 		}
 
 		return
@@ -241,7 +241,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 			_ = NotificationService.GetServiceInstance().SendEvent(cookieStr, "errorNotif", "Failed to delete document!")
 		}
 
-		_ = instance.SendEvent(cookieStr, "DocumentDelete", "Success")
+		instance.SendEventToAllInstancesOfUser(cookieStr, "DocumentDelete", "Success")
 	}
 
 	if err != nil {
