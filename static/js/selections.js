@@ -85,7 +85,7 @@ var selectionsModule = (function () {
         }
 
         /**
-         * Remove all the spawned points.
+         * Remove all the spawned points. Points are visual elements on the screen, that have yet to become rectangles.
          */
         clearSpawnedPoints() {
             while (this.nodes.length > 0) {
@@ -94,6 +94,9 @@ var selectionsModule = (function () {
             }
         }
 
+        /**
+         * Remove spawned rectangles.
+         */
         clearSpawnedRectangle() {
             if (this.rectangleDiv) {
                 this.rectangleDiv.remove()
@@ -223,7 +226,10 @@ var selectionsModule = (function () {
         }
     }
 
-    function refreshSelectionNodes() {
+    /**
+     * Redraw selection nodes.
+     */
+    function redrawSelectionNodes() {
         if (selectionsMap.size <= 0) {
             return
         }
@@ -239,6 +245,9 @@ var selectionsModule = (function () {
         }
     }
 
+    /**
+     * Mirror a page to other pages. This applies to all pages.
+     */
     function replicateSelection() {
         let total = Number(document.getElementById("documents").getAttribute("number-of-pages"))
         let replicateFrom = Number(document.getElementById("replicate-page").value) - 1
@@ -269,14 +278,14 @@ var selectionsModule = (function () {
             selectionsMap.set(i, recArr)
         }
 
-        refreshSelectionNodes()
+        redrawSelectionNodes()
     }
 
     return {
         map: selectionsMap, //For Debug
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
-        refreshSelectionNodes: refreshSelectionNodes,
+        refreshSelectionNodes: redrawSelectionNodes,
         replicateSelection: replicateSelection,
     };
 })()
