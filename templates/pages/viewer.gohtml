@@ -20,8 +20,10 @@
                         <div class="d-flex gap-2">
                             <button class="btn btn-secondary">Clear</button>
                             <div class="d-flex flex-row gap-1">
-                                <button class="btn btn-secondary" onclick="selectionsModule.replicateSelection()">Replicate</button>
-                                    <input id="replicate-page" style="width: 30px;" type="text" value="1">
+                                <button class="btn btn-secondary" onclick="selectionsModule.replicateSelection()">
+                                    Replicate
+                                </button>
+                                <input id="replicate-page" style="width: 30px;" type="text" value="1">
                             </div>
                         </div>
                     </div>
@@ -37,14 +39,15 @@
                 </button>
             </div>
 
-            <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" number-of-pages="{{.NumberOfPages}}" id="documents">
-                {{range $index, $element := .Images}}
-                    <div id="selection-{{$index}}" page="{{$index}}" class="border border-1">
-                        <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage"
-                             width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{$element}}">
-                    </div>
-                {{end}}
-            </div>
+            <a>Offset: {{.ContentDetails.PageInfo.Offset}}</a>
+            <a>Limit: {{.ContentDetails.PageInfo.Limit}}</a>
+            <a>NextPage: {{ .ContentDetails.PageInfo.NextPage }}</a>
+            <a>LastPage: {{.ContentDetails.PageInfo.LastPage}}</a>
+            <a>NumberOfPages: {{.ContentDetails.PageData.ViewData.NumberOfPages}}</a>
+            <a>DocumentUid: {{.ContentDetails.PageData.DocumentUid}}</a>
+            {{template "viewerImages" .ContentDetails.PageData.ViewData}}
+            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Next</a>
+            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Back</a>
         </div>
 
         <template id="point-template">
@@ -69,5 +72,17 @@
 
         <script src="/js/zoom.js"></script>
         <script src="/js/selections.js"></script>
+    </div>
+{{end}}
+
+{{block "viewerImages" . }}
+    <div class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column"
+         number-of-pages="{{.NumberOfPages}}" id="documents">
+        {{range $index, $element := .Images}}
+            <div id="selection-{{$index}}" page="{{$index}}" class="border border-1">
+                <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage"
+                     width="{{$.Width}}px" height="{{$.Height}}px" src="data:image/png;base64,{{$element}}">
+            </div>
+        {{end}}
     </div>
 {{end}}

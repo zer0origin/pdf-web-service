@@ -20,7 +20,7 @@ type GetDocumentsResponse struct {
 	Documents []models.Document `json:"documents"`
 }
 
-func (t Api) GetDocumentsByOwnerUUID(ownerUUID uuid.UUID, limit, offset int8) ([]models.Document, error) {
+func (t Api) GetDocumentsByOwnerUUID(ownerUUID uuid.UUID, limit, offset uint32) ([]models.Document, error) {
 	url := fmt.Sprintf("%s/api/v1/documents?limit=%d&offset=%d&exclude=pdfBase64&ownerUUID=%s", t.BaseUrl, limit, offset, ownerUUID.String())
 	method := "GET"
 
@@ -157,8 +157,8 @@ func (t Api) AddMeta(request AddMetaRequest) error {
 
 var GetMetaNotFoundError = errors.New("user meta data not found")
 
-func (t Api) GetMeta(documentUid, ownerUid string) (models.Meta, error) {
-	url := fmt.Sprintf("%s/api/v1/meta/?documentUUID=%s&ownerUUID=%s", t.BaseUrl, documentUid, ownerUid)
+func (t Api) GetMeta(documentUid, ownerUid string, offset, limit uint32) (models.Meta, error) {
+	url := fmt.Sprintf("%s/api/v1/meta/?documentUUID=%s&ownerUUID=%s&offset=%d&limit=%d", t.BaseUrl, documentUid, ownerUid, offset, limit)
 	method := "GET"
 
 	req, err := http.NewRequest(method, url, nil)

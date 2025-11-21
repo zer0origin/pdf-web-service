@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Document struct {
@@ -16,7 +17,7 @@ type Document struct {
 
 type Meta struct {
 	DocumentUUID  uuid.UUID          `json:"documentUUID" example:"ba3ca973-5052-4030-a528-39b49736d8ad"`
-	NumberOfPages *uint32            `json:"numberOfPages,omitempty" example:"31"`
+	NumberOfPages *int               `json:"numberOfPages,omitempty" example:"31"`
 	Width         *float32           `json:"width,omitempty" example:"1920"`
 	Height        *float32           `json:"height,omitempty" example:"1080"`
 	Images        *map[uint32]string `json:"images,omitempty"`
