@@ -40,7 +40,6 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 	cookieStr, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUid + " not found")
-		c.Redirect(http.StatusFound, "/")
 		return
 	}
 

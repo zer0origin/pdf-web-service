@@ -3,6 +3,7 @@ package NotificationService
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -108,4 +109,24 @@ func (t *NotificationDispatcher) SendEvent(uid, eventName, msg string) error {
 	}
 
 	return nil
+}
+
+// SendEventToAllInstancesOfUser send an event to all connected instances of a user. Only possible if grouped uid is used, (i.e. "Subject.InstanceIdentifier")
+func (t *NotificationDispatcher) SendEventToAllInstancesOfUser(uid, eventName, msg string) {
+	if strings.Contains(uid, ".") {
+		subject := strings.Split(uid, ".")[0]
+
+		for uidStored, _ := range t.UserNotifications {
+			if strings.Contains(uidStored, ".") {
+				uidStoredSubject := strings.Split(uidStored, ".")[0]
+				if subject == uidStoredSubject {
+					_ = t.SendEvent(uidStored, eventName, msg)
+				}
+			}
+		}
+
+		return
+	}
+
+	_ = t.SendEvent(uid, eventName, msg)
 }

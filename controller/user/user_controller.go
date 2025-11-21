@@ -271,15 +271,20 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
 	cookieStr, err := c.Cookie("client_id")
-	if err != nil {
+	if cookieStr == "" {
+		fmt.Println("Creating new client_id")
 		nUUID := uuid.NewString()
 		cookieStr = fmt.Sprintf("%s.%s", subject, nUUID[len(nUUID)-12:])
 		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
-		fmt.Println(cookieStr)
+
+		_, err := fmt.Fprint(c.Writer, "")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		c.Writer.Flush()
 	}
-	c.Writer.Flush()
 
 	notificationService := NotificationService.GetServiceInstance()
 	notificationChannel, err := notificationService.GetOrCreateNotificationChannel(cookieStr)
