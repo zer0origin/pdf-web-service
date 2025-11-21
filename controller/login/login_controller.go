@@ -106,6 +106,7 @@ func (t GinLogin) Logout(c *gin.Context) {
 		_ = t.Keycloak.LogoutUser(refreshToken)
 		c.SetCookie("accessToken", "", -1, "/", "", false, false)
 		c.SetCookie("refreshToken", "", -1, "/", "", false, false)
+		c.SetCookie("client_id", "", -1, "/", "", false, false)
 		c.SetCookie("idToken", "", -1, "/", "", false, false)
 		c.Header("HX-Redirect", "/")
 		c.Status(http.StatusOK)
