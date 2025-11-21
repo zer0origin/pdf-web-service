@@ -57,24 +57,24 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 		return
 	}
 
-	var limit int8 = 15
+	var limit uint32 = 15
 	if limitValue, present := c.GetQuery("limit"); present {
 		parseInt, err := strconv.ParseInt(limitValue, 10, 8)
 		if err != nil {
 			return
 		}
 
-		limit = int8(parseInt)
+		limit = uint32(parseInt)
 	}
 
-	var offset int8 = 0
+	var offset uint32 = 0
 	if offsetValue, present := c.GetQuery("offset"); present {
 		parseInt, err := strconv.ParseInt(offsetValue, 10, 8)
 		if err != nil {
 			return
 		}
 
-		offset = int8(parseInt)
+		offset = uint32(parseInt)
 	}
 
 	if offset < 0 {
@@ -82,7 +82,7 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	}
 
 	if limit <= 1 {
-		limit = 1
+		limit = 15
 	}
 
 	subject, _ := token.Claims.GetSubject()
@@ -103,15 +103,16 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 		NavDetails: &models.NavDetails{IsAuthenticated: true},
 		ContentDetails: ContentDetails{
 			PageInfo: models.PageInfo{
-				Offset:   int(offset),
-				NextPage: int(offset + limit),
-				LastPage: int(offset - limit),
-				Limit:    int(limit),
+				Offset:   offset,
+				NextPage: offset + limit,
+				LastPage: offset - limit,
+				Limit:    limit,
 			},
 			UserData: documentsOwnerByUser,
 		},
 		NotificationSettings: &models.NotificationSettings{Uid: subject},
 	}
+
 	c.HTML(http.StatusOK, "userdashboard", data)
 }
 

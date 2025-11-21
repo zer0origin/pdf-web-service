@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
+	"pdf_service_web/models"
 	"pdf_service_web/service/NotificationService"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -43,7 +45,35 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 		return
 	}
 
-	meta, err := t.JesrApi.GetMeta(documentUid, ownerUid)
+	var offset uint32 = 0
+	if offsetValue, present := c.GetQuery("offset"); present {
+		parseInt, err := strconv.ParseInt(offsetValue, 10, 8)
+		if err != nil {
+			return
+		}
+
+		offset = uint32(parseInt)
+	}
+
+	var limit uint32 = 5
+	if limitValue, present := c.GetQuery("limit"); present {
+		parseInt, err := strconv.ParseInt(limitValue, 10, 8)
+		if err != nil {
+			return
+		}
+
+		limit = uint32(parseInt)
+	}
+
+	if limit <= 0 {
+		limit = 5
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	meta, err := t.JesrApi.GetMeta(documentUid, ownerUid, offset, limit)
 	if err != nil {
 		if errors.Is(err, jesr.GetMetaNotFoundError) {
 			fmt.Println("User meta data not found. Creating now!")
@@ -64,9 +94,42 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 			}
 		}
 
+		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve document meta"})
 		return
 	}
 
-	c.HTML(http.StatusOK, "viewer", meta)
+	type ContentDetails struct {
+		PageInfo models.PageInfo
+		PageData any
+	}
+
+	type ViewerData struct {
+		ViewData    models.Meta
+		DocumentUid string
+	}
+
+	nextPage := offset + limit
+	lastPage := offset - limit
+
+	if lastPage >= nextPage {
+		lastPage = 0
+	}
+
+	newModel := models.PageDefaults{
+		ContentDetails: ContentDetails{
+			PageInfo: models.PageInfo{
+				Offset:   offset,
+				NextPage: nextPage,
+				LastPage: lastPage,
+				Limit:    limit,
+			},
+			PageData: ViewerData{
+				ViewData:    meta,
+				DocumentUid: documentUid,
+			},
+		},
+	}
+
+	c.HTML(http.StatusOK, "viewer", newModel)
 }
