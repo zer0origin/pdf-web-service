@@ -11,7 +11,7 @@ type NotificationDispatcher struct {
 	UserNotifications map[string]*NotificationChannel
 	UserLock          sync.Mutex
 	templates         map[string]string
-}
+} //TODO: We should keep track of issues uids, or maybe a JWT token.
 
 type NotificationChannel struct {
 	Channel          chan string
