@@ -46,8 +46,14 @@
             <a>NumberOfPages: {{.ContentDetails.PageData.ViewData.NumberOfPages}}</a>
             <a>DocumentUid: {{.ContentDetails.PageData.DocumentUid}}</a>
             {{template "viewerImages" .ContentDetails.PageData.ViewData}}
-            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Next</a>
-            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}' hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Back</a>
+            {{if .ContentDetails.PageInfo.NextPage}}
+                <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}'
+                   hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Next</a>
+            {{end}}
+            {{if .ContentDetails.PageInfo.LastPage}}
+                <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}'
+                   hx-get="/viewer/documents/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.LastPage}}">Back</a>
+            {{end}}
         </div>
 
         <template id="point-template">

@@ -112,17 +112,23 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 	nextPage := offset + limit
 	lastPage := offset - limit
 
-	if lastPage >= nextPage {
-		lastPage = 0
-	}
-
 	newModel := models.PageDefaults{
 		ContentDetails: ContentDetails{
 			PageInfo: models.PageInfo{
-				Offset:   offset,
-				NextPage: nextPage,
-				LastPage: lastPage,
-				Limit:    limit,
+				Offset: offset,
+				NextPage: func() *uint32 {
+					if nextPage >= uint32(*meta.NumberOfPages) {
+						return nil
+					}
+					return &nextPage
+				}(),
+				LastPage: func() *uint32 {
+					if lastPage >= nextPage {
+						return nil
+					}
+					return &lastPage
+				}(),
+				Limit: limit,
 			},
 			PageData: ViewerData{
 				ViewData:    meta,

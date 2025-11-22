@@ -16,7 +16,7 @@ type NotificationSettings struct {
 
 type PageInfo struct {
 	Offset   uint32
-	NextPage uint32
-	LastPage uint32
+	NextPage *uint32
+	LastPage *uint32
 	Limit    uint32
 }
