@@ -39,12 +39,6 @@
                 </button>
             </div>
 
-            <a>Offset: {{.ContentDetails.PageInfo.Offset}}</a>
-            <a>Limit: {{.ContentDetails.PageInfo.Limit}}</a>
-            <a>NextPage: {{ .ContentDetails.PageInfo.NextPage }}</a>
-            <a>LastPage: {{.ContentDetails.PageInfo.LastPage}}</a>
-            <a>NumberOfPages: {{.ContentDetails.PageData.ViewData.NumberOfPages}}</a>
-            <a>DocumentUid: {{.ContentDetails.PageData.DocumentUid}}</a>
             {{template "viewerImages" .ContentDetails.PageData.ViewData}}
             {{if .ContentDetails.PageInfo.NextPage}}
                 <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}'
