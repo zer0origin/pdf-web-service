@@ -23,9 +23,7 @@
             {{template "notifications" .}}
         </div>
     {{else}}
-        <script>
-            window.location.href = "/"
-        </script>
+        <div hx-trigger="load" hx-headers='{"Accept": "text/html"}' hx-get="/login"></div>
     {{end}}
     <div id="contents" class="container my-5 d-flex flex-column d-flex justify-content-center align-items-center gap-1"></div>
     </body>
