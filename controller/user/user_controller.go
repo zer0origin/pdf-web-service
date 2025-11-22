@@ -99,13 +99,15 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 		}
 	}
 
+	nextPage := offset + limit
+	lastPage := offset - limit
 	data := models.PageDefaults{
 		NavDetails: &models.NavDetails{IsAuthenticated: true},
 		ContentDetails: ContentDetails{
 			PageInfo: models.PageInfo{
 				Offset:   offset,
-				NextPage: offset + limit,
-				LastPage: offset - limit,
+				NextPage: &nextPage,
+				LastPage: &lastPage,
 				Limit:    limit,
 			},
 			UserData: documentsOwnerByUser,
