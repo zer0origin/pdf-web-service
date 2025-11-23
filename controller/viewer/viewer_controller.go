@@ -19,7 +19,28 @@ type GinViewer struct {
 	JesrApi     jesr.Api
 }
 
+type ContentDetails struct {
+	PageInfo models.PageInfo
+	PageData any
+}
+
+type ViewerData struct {
+	ViewData    models.Meta
+	DocumentUid string
+}
+
 func (t GinViewer) GetViewer(c *gin.Context) {
+	documentUid := c.Param("uid")
+	_, err := uuid.Parse(documentUid)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse uid"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "viewer", gin.H{"DocumentUid": documentUid})
+}
+
+func (t GinViewer) GetImages(c *gin.Context) {
 	documentUid := c.Param("uid")
 	_, err := uuid.Parse(documentUid)
 	if err != nil {
@@ -99,16 +120,6 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 		return
 	}
 
-	type ContentDetails struct {
-		PageInfo models.PageInfo
-		PageData any
-	}
-
-	type ViewerData struct {
-		ViewData    models.Meta
-		DocumentUid string
-	}
-
 	nextPage := offset + limit
 	lastPage := offset - limit
 
@@ -137,5 +148,5 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 		},
 	}
 
-	c.HTML(http.StatusOK, "viewer", newModel)
+	c.HTML(http.StatusOK, "viewerImages", newModel)
 }

@@ -1,0 +1,23 @@
+{{block "viewerImages" . }}
+    <div id="images" hx-swap-oob="outerHTML" class="d-flex gap-2 w-100 p-0 justify-content-center align-items-center flex-column" number-of-pages="{{.ContentDetails.PageData.ViewData.NumberOfPages}}">
+        {{range $index, $element := .ContentDetails.PageData.ViewData.Images}}
+            <div id="selection-{{$index}}" page="{{$index}}" class="border border-1">
+                <img id="image-{{$index}}" onclick="selectionsModule.onClick(event)" class="viewerImage"
+                     width="{{$.ContentDetails.PageData.ViewData.Width}}px" height="{{$.ContentDetails.PageData.ViewData.Height}}px" src="data:image/png;base64,{{$element}}">
+            </div>
+        {{end}}
+
+        {{if .ContentDetails.PageInfo.NextPage}}
+            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}'
+               hx-get="/viewer/images/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.NextPage}}">Next</a>
+        {{end}}
+        {{if .ContentDetails.PageInfo.LastPage}}
+            <a class="btn btn-sm btn-outline-dark" hx-headers='{"Accept": "text/html"}'
+               hx-get="/viewer/images/{{.ContentDetails.PageData.DocumentUid}}?limit={{.ContentDetails.PageInfo.Limit}}&offset={{.ContentDetails.PageInfo.LastPage}}">Back</a>
+        {{end}}
+
+        <script>
+            zoomModule.setDefaults({{$.ContentDetails.PageData.ViewData.Height}}, {{$.ContentDetails.PageData.ViewData.Width}})
+        </script>
+    </div>
+{{end}}

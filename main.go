@@ -83,6 +83,7 @@ func main() {
 	}
 	viewer.SetViewerControllerInstance(viewerController)
 	router.GET("/viewer/documents/:uid", middleware.RequireAuthenticated, viewerController.GetViewer)
+	router.GET("/viewer/images/:uid", middleware.RequireAuthenticated, viewerController.GetImages)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",
