@@ -125,7 +125,7 @@ var selectionsModule = (function () {
 
             exitControls.onclick = () => {
                 let name = String(this.imageDiv.id);
-                let key = Number(name.split("-")[1]); //todo: change
+                let key = name.split("-")[1]; //todo: change
                 selectionsModule.deleteSelection(key, this.id)
             }
 
@@ -158,7 +158,7 @@ var selectionsModule = (function () {
 
     /**
      *
-     * @type {Map<number, Array<Rectangle>>}
+     * @type {Map<string, Array<Rectangle>>}
      */
     let selectionsMap = new Map();
 
@@ -183,7 +183,7 @@ var selectionsModule = (function () {
         }
 
         let name = String(event.target.id);
-        let pageNumber = Number(name.split("-")[1]); //todo: change
+        let pageNumber = name.split("-")[1];
         let selectionArr = `selection-${pageNumber}`
 
         let present = selectionsMap.has(pageNumber)
@@ -234,51 +234,12 @@ var selectionsModule = (function () {
             return
         }
 
-        for (let i = 0; i < selectionsMap.size; i++) {
-            let recArr = selectionsMap.get(i);
-
-            for (let j = 0; j < recArr.length; j++) {
-                let rec = recArr[j];
+        selectionsMap.forEach((recArr, i) => {
+            recArr.forEach((rec, j) => {
                 rec.clearSpawnedNodes();
                 rec.spawnRectangle()
-            }
-        }
-    }
-
-    /**
-     * Mirror a page to other pages. This applies to all pages.
-     */
-    function replicateSelection() {
-        let total = Number(document.getElementById("documents").getAttribute("number-of-pages"))
-        let replicateFrom = Number(document.getElementById("replicate-page").value) - 1
-        let dataToReplicate = selectionsMap.get(replicateFrom);
-
-        if (!dataToReplicate || dataToReplicate.length <= 0) {
-            return
-        }
-
-        for (let i = 0; i < total; i++) {
-            if (i === replicateFrom) {
-                continue
-            }
-
-            let spawnDiv = document.getElementById(`selection-${i}`)
-            let imageDiv = document.getElementById(`image-${i}`)
-            let recArr = []
-
-            dataToReplicate.forEach(value => {
-                let recData = new Rectangle(spawnDiv, imageDiv)
-                recData.p1 = value.p1.copy()
-                recData.p2 = value.p2.copy()
-                recData.spawnRectangle()
-
-                recArr.push(recData)
             })
-
-            selectionsMap.set(i, recArr)
-        }
-
-        redrawSelectionNodes()
+        })
     }
 
     return {
@@ -286,7 +247,6 @@ var selectionsModule = (function () {
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
         refreshSelectionNodes: redrawSelectionNodes,
-        replicateSelection: replicateSelection,
     };
 })()
 
