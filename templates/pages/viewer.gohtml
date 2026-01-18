@@ -1,7 +1,6 @@
 {{block "viewer" . }}
     <div id="contents" hx-swap-oob="#contents">
-
-        <div class="d-flex flex-column align-items-center gap-1" style="top: 0px">
+        <div id="viewer" class="d-flex flex-column align-items-center gap-1" documentId="{{.DocumentUid}}" style="top: 0px">
             <h2 class="text-center">Page Viewer</h2>
             {{/*            <div id="control-centre"*/}}
             {{/*                 class="d-flex flex-column align-items-center gap-1 border border-1 position-sticky top-0 p-1 z-3 rounded rounded-3"*/}}
@@ -54,20 +53,11 @@
                     <span class="exit-controls text-start btn p-0"
                           style="font-size: 10px; color: rgba(0,0,0,0.5);">X</span>
                 </div>
-{{/*                <div class="d-flex flex-row justify-content-end" style="height: 100%">*/}}
-{{/*                    <div style="width: 10px; height: 10px; background-color: red;"></div>*/}}
-{{/*                </div>*/}}
-{{/*                <div class="d-flex flex-row justify-content-between">*/}}
-{{/*                    <div style="width: 10px; height: 10px; background-color: red;"></div>*/}}
-{{/*                    <div style="width: 10px; height: 10px; background-color: red;"></div>*/}}
-{{/*                </div>*/}}
             </div>
         </template>
 
         <script src="/js/zoom.js"></script>
         <script src="/js/selections.js"></script>
+        <script src="/js/api.js"></script>
     </div>
-    <script>
-        zoomModule.setDefaults(null, null, document.getElementById("zoom-info"))
-    </script>
 {{end}}
