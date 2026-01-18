@@ -56,7 +56,6 @@ func main() {
 		Middleware:            *middleware,
 	}
 	login.SetControllerInstance(loginController)
-
 	router.GET("/", loginController.BaseRender)
 	router.GET("/login", loginController.LoginRender)
 	router.POST("/login", loginController.LoginAuthHandler)
@@ -67,7 +66,6 @@ func main() {
 		JesrApi:     jesrApi,
 	}
 	user.SetControllerInstance(userController)
-
 	router.GET("/app", middleware.RequireAuthenticated, userController.AppBase)
 	router.GET("/user/details", middleware.RequireAuthenticated, userController.UserInfo)
 	router.POST("/user/upload", BodySizeMiddleware(10*1024*1024), middleware.RequireAuthenticated, userController.Upload)
@@ -84,6 +82,7 @@ func main() {
 	viewer.SetViewerControllerInstance(viewerController)
 	router.GET("/viewer/documents/:uid", middleware.RequireAuthenticated, viewerController.GetViewer)
 	router.GET("/viewer/images/:uid", middleware.RequireAuthenticated, viewerController.GetImages)
+	router.POST("/selection/bulk/", middleware.RequireAuthenticated, viewerController.UploadSelections)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",

@@ -9,6 +9,7 @@ import (
 	"pdf_service_web/models"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -194,4 +195,32 @@ func (t Api) GetMeta(documentUid, ownerUid string, offset, limit uint32) (models
 	}
 
 	return *data, nil
+}
+
+func (t Api) AddSelectionsBulk(c *gin.Context) error {
+	url := fmt.Sprintf("%s/api/v1/selections/bulk", t.BaseUrl)
+	method := "POST"
+
+	req, err := http.NewRequest(method, url, c.Request.Body)
+	if err != nil {
+		return err
+	}
+	req.Header = c.Request.Header
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		bytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
+	}
+
+	return nil
 }
