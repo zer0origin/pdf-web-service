@@ -150,3 +150,15 @@ func (t GinViewer) GetImages(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "viewerImages", newModel)
 }
+
+func (t GinViewer) UploadSelections(c *gin.Context) {
+	//TODO: Just forward the request - don't bother parsing it.
+	//TODO: Check that the user has access to this document, before adding the selections.
+	err := t.JesrApi.AddSelectionsBulk(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save selection data"})
+		return
+	}
+
+	c.Status(200)
+}
