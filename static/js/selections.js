@@ -43,16 +43,18 @@ class Rectangle {
     /**
      * @type {[HTMLElement]}
      */
-    nodes = [];
+    pointNodesArr = [];
 
     /**
      * @type {HTMLElement}
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, imageDiv) {
+    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined) {
         this.spawnDiv = spawnDiv;
         this.imageDiv = imageDiv;
+        this.p1 = p1;
+        this.p2 = p2;
         this.id = Rectangle.lastId++;
     }
 
@@ -65,14 +67,14 @@ class Rectangle {
     #spawnPoint(p, element, position) {
         let size = 5;
         let temp = document.getElementById("point-template")
-        let node = document.importNode(temp.content.querySelector("div"), true)
-        element.appendChild(node)
-        this.nodes.push(node)
+        let pointDiv = document.importNode(temp.content.querySelector("div"), true)
+        element.appendChild(pointDiv)
+        this.pointNodesArr.push(pointDiv)
 
-        node.style.width = `${size}px`;
-        node.style.height = `${size}px`;
-        node.style.top = `${(position.top + (p.y * zoomModule.getZoomLevel())) - (size / 2)}px`
-        node.style.left = `${(position.left + (p.x * zoomModule.getZoomLevel())) - (size / 2)}px`
+        pointDiv.style.width = `${size}px`;
+        pointDiv.style.height = `${size}px`;
+        pointDiv.style.top = `${(position.top + (p.y * zoomModule.getZoomLevel())) - (size / 2)}px`
+        pointDiv.style.left = `${(position.left + (p.x * zoomModule.getZoomLevel())) - (size / 2)}px`
     }
 
     /**
@@ -93,8 +95,8 @@ class Rectangle {
      * Remove all the spawned points. Points are visual elements on the screen, that have yet to become rectangles.
      */
     clearSpawnedPoints() {
-        while (this.nodes.length > 0) {
-            let element = this.nodes.pop();
+        while (this.pointNodesArr.length > 0) {
+            let element = this.pointNodesArr.pop();
             element.remove();
         }
     }
