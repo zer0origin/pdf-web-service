@@ -227,11 +227,17 @@ var selectionsModule = (function () {
         }
     }
 
-    /**
-     * @param data {SelectionDTO}
-     */
-    function load(data){
 
+    /**
+     * Spawns a rectangle on an image.
+     * @param spawnDiv {HTMLDivElement}
+     * @param imageDiv {HTMLDivElement}
+     * @param p1 {Point}
+     * @param p2 {Point}
+     */
+    function loadRectangle(spawnDiv, imageDiv, p1, p2){
+        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2);
+        rec.spawnRectangle();
     }
 
     function deleteSelection(key, id) {
@@ -264,6 +270,7 @@ var selectionsModule = (function () {
 
     return {
         map: selectionsMap, //For Debug
+        load: loadRectangle,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
         refreshSelectionNodes: redrawSelectionNodes,
