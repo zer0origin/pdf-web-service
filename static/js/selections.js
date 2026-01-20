@@ -44,7 +44,6 @@ class Rectangle {
      * @type {[HTMLElement]}
      */
     pointNodesArr = [];
-
     /**
      * @type {HTMLElement}
      */
