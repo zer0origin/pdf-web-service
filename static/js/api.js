@@ -52,6 +52,16 @@ var apiModule = (function (){
         promise.catch(reason => console.error(reason))
     }
 
+    function loadSelectionsFromDatabase(){
+        let url = `/selection?documentUUID=${getDocumentId()}`
+        let promise = fetch(url, {
+            method: "GET",
+            cache: "default",
+        })
+
+        promise.then(res => res.json()).then(data => console.log(JSON.parse(data))).catch(reason => console.error(reason))
+    }
+
     /**
      * @returns {string}
      */
@@ -62,6 +72,7 @@ var apiModule = (function (){
     return {
         getDocumentId: getDocumentId,
         convertSelectionMapToDTO: convertSelectionMapToDTO,
-        saveSelectionsToDatabase: saveSelectionsToDatabase
+        saveSelectionsToDatabase: saveSelectionsToDatabase,
+        load: loadSelectionsFromDatabase
     }
 })()

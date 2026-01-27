@@ -49,11 +49,17 @@ class Rectangle {
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined) {
+    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined) {
         this.spawnDiv = spawnDiv;
         this.imageDiv = imageDiv;
         this.p1 = p1;
         this.p2 = p2;
+
+        if (id !== undefined) {
+            this.id = id;
+            return;
+        }
+
         this.id = Rectangle.lastId++;
     }
 
@@ -161,6 +167,7 @@ class Rectangle {
         this.clearSpawnedRectangle();
     }
 }
+
 var selectionsModule = (function () {
     Array.prototype.remove = function (from, to) {
         var rest = this.slice((to || from) + 1 || this.length);
@@ -196,7 +203,7 @@ var selectionsModule = (function () {
 
         let name = String(event.target.id);
         let pageKey = name.split("-")[1];
-        let selectionArr = `selection-${pageKey}`
+        let spawnDiv = `selection-${pageKey}`
 
         let present = selectionsMap.has(pageKey)
         if (!present) {
@@ -205,7 +212,7 @@ var selectionsModule = (function () {
 
         let recArr = selectionsMap.get(pageKey);
         if (recArr.length <= 0) {
-            let rec = new Rectangle(document.getElementById(selectionArr), event.target);
+            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
             rec.p1 = imageCoordsRelativeToSelf;
             recArr.push(rec)
             rec.spawnP1()
@@ -219,7 +226,7 @@ var selectionsModule = (function () {
             recData.clearSpawnedPoints();
             recData.spawnRectangle()
         } else {
-            let rec = new Rectangle(document.getElementById(selectionArr), event.target);
+            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
             rec.p1 = imageCoordsRelativeToSelf;
             recArr.push(rec)
             rec.spawnP1()
@@ -251,6 +258,7 @@ var selectionsModule = (function () {
         let imageDiv = document.getElementById(`image-${pageKey}`);
 
         let rec = new Rectangle(spawnDiv, imageDiv, p1, p2);
+        pushSelectionToMap(pageKey, rec);
         rec.spawnRectangle();
     }
 
