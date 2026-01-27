@@ -10,19 +10,19 @@ class SelectionDTO {
     }
 }
 
-var apiModule = (function (){
+var apiModule = (function () {
     /**
      *
      * @param data {Map<string, Array<Rectangle>>}
      */
-    function convertSelectionMapToDTO(data ){
+    function convertSelectionMapToDTO(data) {
         mapDTO = []
         data.forEach((pageRectangleArray, key) => {
             pageRectangleArray.forEach((rectangle) => {
                 p1 = rectangle.p1
                 p2 = rectangle.p2
 
-                if (!p1 || !p2){
+                if (!p1 || !p2) {
                     return
                 }
 
@@ -41,7 +41,7 @@ var apiModule = (function (){
      *
      * @param data {Map<string, Array<Rectangle>>}
      */
-    function saveSelectionsToDatabase(data){
+    function saveSelectionsToDatabase(data) {
         let url = "/selection/bulk/"
         let promise = fetch(url, {
             method: "POST",
@@ -70,14 +70,12 @@ var apiModule = (function (){
                 resolve(selectionData)
             }).catch(reason => reject(reason))
         })
-
-        promise.then(res => res.json()).then(data => console.log(JSON.parse(data))).catch(reason => console.error(reason))
     }
 
     /**
      * @returns {string}
      */
-    function getDocumentId(){
+    function getDocumentId() {
         return document.getElementById("viewer").attributes["documentId"].nodeValue;
     }
 
