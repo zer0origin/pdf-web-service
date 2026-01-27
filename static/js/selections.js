@@ -39,6 +39,7 @@ class Rectangle {
      */
     imageDiv;
     id;
+    isExternal
 
     /**
      * @type {[HTMLElement]}
@@ -49,11 +50,12 @@ class Rectangle {
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined) {
+    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined, isExternal=false) {
         this.spawnDiv = spawnDiv;
         this.imageDiv = imageDiv;
         this.p1 = p1;
         this.p2 = p2;
+        this.isExternal = isExternal;
 
         if (id !== undefined) {
             this.id = id;
@@ -257,7 +259,7 @@ var selectionsModule = (function () {
         let spawnDiv = document.getElementById(`selection-${pageKey}`);
         let imageDiv = document.getElementById(`image-${pageKey}`);
 
-        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2, id);
+        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2, id, true);
         pushSelectionToMap(pageKey, rec);
         rec.spawnRectangle();
     }

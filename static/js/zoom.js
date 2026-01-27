@@ -2,7 +2,7 @@ var zoomModule = (function() {
     let currentZoomLevel = 1;
     let defaultWidth = null
     let defaultHeight = null
-    let zoomCounterHtmlElement = document.getElementById("zoom-info"); //TODO: CHANGE THIS
+    let zoomCounterHtmlElement = document.getElementById("zoom-info");
 
     /**
      * Gets the array of images that the user can currently see.
