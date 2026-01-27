@@ -226,15 +226,30 @@ var selectionsModule = (function () {
         }
     }
 
+    /**
+     * @param pageKey {string}
+     * @param rec {Rectangle}
+     */
+    function pushSelectionToMap(pageKey, rec) {
+        let present = selectionsMap.has(pageKey)
+        if (!present) {
+            selectionsMap.set(pageKey, [])
+        }
+
+        let recArr = selectionsMap.get(pageKey);
+        recArr.push(rec);
+    }
 
     /**
      * Spawns a rectangle on an image.
-     * @param spawnDiv {HTMLDivElement}
-     * @param imageDiv {HTMLDivElement}
+     * @param pageKey {string}
      * @param p1 {Point}
      * @param p2 {Point}
      */
-    function loadRectangle(spawnDiv, imageDiv, p1, p2){
+    function loadRectangle(pageKey, p1, p2, id = undefined) {
+        let spawnDiv = document.getElementById(`selection-${pageKey}`);
+        let imageDiv = document.getElementById(`image-${pageKey}`);
+
         let rec = new Rectangle(spawnDiv, imageDiv, p1, p2);
         rec.spawnRectangle();
     }
