@@ -5,7 +5,6 @@ import (
 	"sync"
 )
 
-// TODO: Change notification system to work per session (per token), not per user. client_id for notification param.
 type NotificationService interface {
 	CreateNotificationChannel(uid string) *NotificationChannel
 	DeleteNotificationChannel(uid string) bool
