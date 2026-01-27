@@ -197,6 +197,7 @@ func (t Api) GetMeta(documentUid, ownerUid string, offset, limit uint32) (models
 	return *data, nil
 }
 
+// AddSelectionsBulk Proxies request through to API server. - TODO: Add checks
 func (t Api) AddSelectionsBulk(c *gin.Context) error {
 	url := fmt.Sprintf("%s/api/v1/selections/bulk", t.BaseUrl)
 	method := "POST"
@@ -223,4 +224,34 @@ func (t Api) AddSelectionsBulk(c *gin.Context) error {
 	}
 
 	return nil
+}
+
+// GetSelectionListString Proxies request through to API server. - TODO: Add checks
+func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
+	queryStr := c.Request.URL.RawQuery
+	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
+	method := "GET"
+
+	req, err := http.NewRequest(method, url, c.Request.Body)
+	if err != nil {
+		return "", err
+	}
+	req.Header = c.Request.Header
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code returned by api: %s", string(bytes))
+	}
+
+	return string(bytes), nil
 }

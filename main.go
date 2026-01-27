@@ -22,7 +22,7 @@ func main() {
 
 	handleEmptyKeycloak := func(str string) { panic("Database login credentials must be present.") }
 	mustNotBeEmpty(handleEmptyKeycloak, models.KEYCLOAK_BASEURL, models.KEYCLOAK_REALM_NAME, models.KEYCLOAK_CLIENT, models.KEYCLOAK_CLIENT_SECRET)
-	config := &keycloak.RealmHandler{
+	realmHandler := &keycloak.RealmHandler{
 		BaseUrl:      models.KEYCLOAK_BASEURL,
 		RealmName:    models.KEYCLOAK_REALM_NAME,
 		Client:       models.KEYCLOAK_CLIENT,
@@ -35,24 +35,24 @@ func main() {
 	router.Static("/images", "static/images")
 	router.Static("/js", "static/js")
 
-	adminHandler, err := keycloak.NewAdminHandler(config)
+	adminHandler, err := keycloak.NewAdminHandler(realmHandler)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	cloakSetup := &keycloak.Api{
-		RealmHandler: config,
+	keycloakAPI := &keycloak.Api{
+		RealmHandler: realmHandler,
 		AdminHandler: adminHandler,
 	}
 
 	middleware := &controller.GinMiddleware{
-		Keycloak: cloakSetup,
+		Keycloak: keycloakAPI,
 	}
 	controller.SetMiddlewareInstance(middleware)
 
 	loginController := &login.GinLogin{
 		AuthenticatedRedirect: "/app",
-		Keycloak:              cloakSetup,
+		Keycloak:              keycloakAPI,
 		Middleware:            *middleware,
 	}
 	login.SetControllerInstance(loginController)
@@ -62,7 +62,7 @@ func main() {
 	router.POST("/logout", loginController.Logout)
 
 	userController := &user.GinUser{
-		KeycloakApi: cloakSetup,
+		KeycloakApi: keycloakAPI,
 		JesrApi:     jesrApi,
 	}
 	user.SetControllerInstance(userController)
@@ -76,17 +76,18 @@ func main() {
 	router.DELETE("/user/documents/:uid", middleware.RequireAuthenticated, userController.DeleteDocument)
 
 	viewerController := &viewer.GinViewer{
-		KeycloakApi: cloakSetup,
+		KeycloakApi: keycloakAPI,
 		JesrApi:     jesrApi,
 	}
 	viewer.SetViewerControllerInstance(viewerController)
 	router.GET("/viewer/documents/:uid", middleware.RequireAuthenticated, viewerController.GetViewer)
 	router.GET("/viewer/images/:uid", middleware.RequireAuthenticated, viewerController.GetImages)
 	router.POST("/selection/bulk/", middleware.RequireAuthenticated, viewerController.UploadSelections)
+	router.GET("/selection/", middleware.RequireAuthenticated, viewerController.LoadSelections)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",
-		KeycloakApi:         cloakSetup,
+		KeycloakApi:         keycloakAPI,
 	}
 	router.GET("/register", registerController.RegisterRender)
 	router.POST("/register", registerController.RegisterHandle)

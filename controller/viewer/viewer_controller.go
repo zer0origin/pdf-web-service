@@ -152,7 +152,6 @@ func (t GinViewer) GetImages(c *gin.Context) {
 }
 
 func (t GinViewer) UploadSelections(c *gin.Context) {
-	//TODO: Just forward the request - don't bother parsing it.
 	//TODO: Check that the user has access to this document, before adding the selections.
 	err := t.JesrApi.AddSelectionsBulk(c)
 	if err != nil {
@@ -161,4 +160,15 @@ func (t GinViewer) UploadSelections(c *gin.Context) {
 	}
 
 	c.Status(200)
+}
+
+func (t GinViewer) LoadSelections(c *gin.Context) {
+	//TODO: Check that the user has access to this document, before adding the selections.
+	str, err := t.JesrApi.GetSelectionListString(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load selection data"})
+		return
+	}
+
+	c.JSON(200, str)
 }
