@@ -257,7 +257,7 @@ var selectionsModule = (function () {
         let spawnDiv = document.getElementById(`selection-${pageKey}`);
         let imageDiv = document.getElementById(`image-${pageKey}`);
 
-        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2);
+        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2, id);
         pushSelectionToMap(pageKey, rec);
         rec.spawnRectangle();
     }
