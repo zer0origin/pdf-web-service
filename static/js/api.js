@@ -52,11 +52,23 @@ var apiModule = (function (){
         promise.catch(reason => console.error(reason))
     }
 
-    function loadSelectionsFromDatabase(){
-        let url = `/selection?documentUUID=${getDocumentId()}`
-        let promise = fetch(url, {
-            method: "GET",
-            cache: "default",
+    /**
+     * Load external selections from the database, and return a promise.
+     * @returns {Promise<any>}
+     */
+    function loadSelectionsFromDatabase() {
+        return new Promise((resolve, reject) => {
+            let url = `/selection?documentUUID=${getDocumentId()}`
+            let promise = fetch(url, {
+                method: "GET",
+                cache: "default",
+            })
+
+            promise.then(res => res.json()).then(data => {
+                let selectionData = JSON.parse(data);
+                selectionData.selections.map(t => selectionsModule.load(t.pageKey, new Point(t.coordinates.x1, t.coordinates.y1), new Point(t.coordinates.x2, t.coordinates.y2), t.selectionUUID))
+                resolve(selectionData)
+            }).catch(reason => reject(reason))
         })
 
         promise.then(res => res.json()).then(data => console.log(JSON.parse(data))).catch(reason => console.error(reason))
