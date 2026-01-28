@@ -313,7 +313,17 @@ var selectionsModule = (function () {
     };
 })()
 
-window.addEventListener("resize", selectionsModule.refreshSelectionNodes);
+window.addEventListener("resize", () => {
+    try {
+        selectionsModule.refreshSelectionNodes()
+    } catch ({name, message}) {
+        if (name === "TypeError") {
+            return
+        }
+
+        console.error(`${name}: ${message}`)
+    }
+});
 
 if (window.zoomModule) {
     zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);
