@@ -1,4 +1,5 @@
-class Point {
+//TODO: Unload selections module after switching away from viewer.
+Point = class Point {
     x;
     y;
 
@@ -20,7 +21,7 @@ class Point {
     }
 }
 
-class Rectangle {
+Rectangle = class Rectangle {
     static lastId = 0
     /**
      * @type {Point}
@@ -276,6 +277,16 @@ var selectionsModule = (function () {
         }
     }
 
+    function deleteAllSelections(){
+        selectionsModule.map.forEach(pageArr => {
+            pageArr.forEach(rec => {
+                rec.clearSpawnedNodes()
+            })
+        })
+
+        selectionsMap = new Map();
+    }
+
     /**
      * Redraw selection nodes.
      */
@@ -293,10 +304,11 @@ var selectionsModule = (function () {
     }
 
     return {
-        map: selectionsMap, //For Debug
+        map: selectionsMap,
         load: loadRectangle,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
+        deleteAllSelections, deleteAllSelections,
         refreshSelectionNodes: redrawSelectionNodes,
     };
 })()
