@@ -51,7 +51,7 @@ Rectangle = class Rectangle {
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined, isExternal=false) {
+    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined, isExternal = false) {
         this.spawnDiv = spawnDiv;
         this.imageDiv = imageDiv;
         this.p1 = p1;
@@ -277,7 +277,7 @@ var selectionsModule = (function () {
         }
     }
 
-    function deleteAllSelections(){
+    function deleteAllSelections() {
         selectionsModule.map.forEach(pageArr => {
             pageArr.forEach(rec => {
                 rec.clearSpawnedNodes()
