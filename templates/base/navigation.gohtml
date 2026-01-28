@@ -46,8 +46,8 @@
 
                     {{if .}}
                         {{if .IsAuthenticated}}
-                            <a id="refresh-toggle" class="btn btn-outline-success" onclick="toggleAutomaticRefresh()">Auto Refresh</a>
-                            <a id="notification-toggle" class="btn btn-outline-success" onclick="toggleNotif()">Notifications</a>
+{{/*                            <a id="refresh-toggle" class="btn btn-outline-success" onclick="toggleAutomaticRefresh()">Auto Refresh</a>*/}}
+{{/*                            <a id="notification-toggle" class="btn btn-outline-success" onclick="toggleNotif()">Notifications</a>*/}}
                             <a class="btn btn-outline-light" hx-headers='{"Accept": "text/html"}' hx-post="/logout">Logout</a>
                         {{end}}
                     {{end}}

@@ -1,4 +1,5 @@
-class Point {
+//TODO: Unload selections module after switching away from viewer.
+Point = class Point {
     x;
     y;
 
@@ -20,7 +21,7 @@ class Point {
     }
 }
 
-class Rectangle {
+Rectangle = class Rectangle {
     static lastId = 0
     /**
      * @type {Point}
@@ -50,7 +51,7 @@ class Rectangle {
      */
     rectangleDiv = undefined
 
-    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined, isExternal=false) {
+    constructor(spawnDiv, imageDiv, p1 = undefined, p2 = undefined, id = undefined, isExternal = false) {
         this.spawnDiv = spawnDiv;
         this.imageDiv = imageDiv;
         this.p1 = p1;
@@ -276,6 +277,16 @@ var selectionsModule = (function () {
         }
     }
 
+    function deleteAllSelections() {
+        selectionsModule.map.forEach(pageArr => {
+            pageArr.forEach(rec => {
+                rec.clearSpawnedNodes()
+            })
+        })
+
+        selectionsMap = new Map();
+    }
+
     /**
      * Redraw selection nodes.
      */
@@ -293,15 +304,26 @@ var selectionsModule = (function () {
     }
 
     return {
-        map: selectionsMap, //For Debug
+        map: selectionsMap,
         load: loadRectangle,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
+        deleteAllSelections, deleteAllSelections,
         refreshSelectionNodes: redrawSelectionNodes,
     };
 })()
 
-window.addEventListener("resize", selectionsModule.refreshSelectionNodes);
+window.addEventListener("resize", () => {
+    try {
+        selectionsModule.refreshSelectionNodes()
+    } catch ({name, message}) {
+        if (name === "TypeError") {
+            return
+        }
+
+        console.error(`${name}: ${message}`)
+    }
+});
 
 if (window.zoomModule) {
     zoomModule.registerZoomChange(selectionsModule.refreshSelectionNodes);

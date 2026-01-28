@@ -1,5 +1,8 @@
-class SelectionDTO {
+SelectionDTO = class SelectionDTO {
     documentUUID
+    /**
+     * @type {{X1, X2, Y1, Y2}}
+     */
     coordinates
     pageKey
 
@@ -12,13 +15,14 @@ class SelectionDTO {
 
 var apiModule = (function () {
     /**
-     *
      * @param data {Map<string, Array<Rectangle>>}
+     * @param includeExternal Should selections from an external source be included in the DTO array?
+     * @returns {SelectionDTO[]}
      */
-    function convertSelectionMapToDTO(data) {
-        mapDTO = []
+    function convertSelectionMapToDTO(data, includeExternal = false) {
+        let mapDTO = []
         data.forEach((pageRectangleArray, key) => {
-            pageRectangleArray.forEach((rectangle) => {
+            pageRectangleArray.filter(value => value.isExternal === includeExternal).forEach((rectangle) => {
                 p1 = rectangle.p1
                 p2 = rectangle.p2
 
@@ -39,17 +43,13 @@ var apiModule = (function () {
 
     /**
      *
-     * @param data {Map<string, Array<Rectangle>>}
+     * @param data {*[]}
      */
     function saveSelectionsToDatabase(data) {
         let url = "/selection/bulk/"
-        let promise = fetch(url, {
-            method: "POST",
-            cache: "no-cache",
-            body: JSON.stringify(data)
-        })
-
-        promise.catch(reason => console.error(reason))
+        return fetch(url, {
+            method: "POST", cache: "no-cache", body: JSON.stringify(data)
+        });
     }
 
     /**
@@ -60,8 +60,7 @@ var apiModule = (function () {
         return new Promise((resolve, reject) => {
             let url = `/selection?documentUUID=${getDocumentId()}`
             let promise = fetch(url, {
-                method: "GET",
-                cache: "default",
+                method: "GET", cache: "default",
             })
 
             promise.then(res => res.json()).then(data => {
@@ -70,6 +69,48 @@ var apiModule = (function () {
                 resolve(selectionData)
             }).catch(reason => reject(reason))
         })
+    }
+
+    let cooldown = false;
+    async function save() {
+        const data = selectionsModule.map;
+        const dataToTransfer = convertSelectionMapToDTO(data);
+        if (dataToTransfer.length <= 0) {
+            console.error("Nothing new to save!")
+            return
+        }
+
+        if (!cooldown) {
+            let res = await saveSelectionsToDatabase(dataToTransfer).catch(reason => {
+                notificationsModule.createError("Error", `Changes could not be saved!`)
+                console.error(reason);
+                return undefined;
+            });
+
+            if (!res){
+                return
+            }
+
+            let body = await res.json();
+            let respData = JSON.parse(body)
+
+            dataToTransfer.forEach((sel, index) => {
+                let transferred = data.get(sel.pageKey).find(rec => rec.p1.x === sel.coordinates.X1
+                    && rec.p1.y === sel.coordinates.Y1
+                    && rec.p2.x === sel.coordinates.X2
+                    && rec.p2.y === sel.coordinates.Y2
+                    && !rec.isExternal);
+
+                transferred.isExternal = true
+                transferred.id = respData.uids[index]
+            })
+
+            notificationsModule.create("Saved", "Your changes have been saved");
+            cooldown = true;
+            setTimeout(() => {
+                cooldown = false;
+            }, 1000)
+        }
     }
 
     /**
@@ -83,6 +124,8 @@ var apiModule = (function () {
         getDocumentId: getDocumentId,
         convertSelectionMapToDTO: convertSelectionMapToDTO,
         saveSelectionsToDatabase: saveSelectionsToDatabase,
-        load: loadSelectionsFromDatabase
+        load: loadSelectionsFromDatabase,
+        save: save
     }
-})()
+})
+()
