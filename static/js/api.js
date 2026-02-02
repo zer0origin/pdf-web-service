@@ -72,7 +72,7 @@ var apiModule = (function () {
     }
 
     let cooldown = false;
-    async function save() {
+    async function saveToAPI() {
         const data = selectionsModule.map;
         const dataToTransfer = convertSelectionMapToDTO(data);
         if (dataToTransfer.length <= 0) {
