@@ -172,3 +172,13 @@ func (t GinViewer) LoadSelections(c *gin.Context) {
 
 	c.JSON(200, str)
 }
+
+func (t GinViewer) DeleteSelection(c *gin.Context) {
+	err := t.JesrApi.DeleteSelection(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save selection data"})
+		return
+	}
+
+	c.JSON(200, gin.H{})
+}

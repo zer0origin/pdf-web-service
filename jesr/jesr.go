@@ -255,3 +255,28 @@ func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
 
 	return string(bytes), nil
 }
+
+// DeleteSelection Proxies request through to API server. - TODO: Add checks, add bulk.
+func (t Api) DeleteSelection(c *gin.Context) error {
+	queryStr := c.Request.URL.RawQuery
+	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
+	method := "DELETE"
+
+	req, err := http.NewRequest(method, url, c.Request.Body)
+	if err != nil {
+		return err
+	}
+	req.Header = c.Request.Header
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code returned by api: %d", res.StatusCode)
+	}
+
+	return nil
+}

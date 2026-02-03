@@ -255,6 +255,7 @@ var selectionsModule = (function () {
      * @param pageKey {string}
      * @param p1 {Point}
      * @param p2 {Point}
+     * @param id {string} The ID of the rectangle
      */
     function loadRectangle(pageKey, p1, p2, id = undefined) {
         let spawnDiv = document.getElementById(`selection-${pageKey}`);
@@ -265,15 +266,29 @@ var selectionsModule = (function () {
         rec.spawnRectangle();
     }
 
-    function deleteSelection(key, id) {
+    async function deleteSelection(key, id) {
         let rectangles = selectionsMap.get(key);
 
         for (let i = 0; i < rectangles.length; i++) {
             let rec = rectangles[i];
-            if (rec.id === id) {
-                rec.clearSpawnedNodes()
-                rectangles.remove(i)
+            if (rec.id !== id) {
+                continue;
             }
+
+            if (rec.isExternal) {
+                let name = String(rec.spawnDiv);
+                let pageKey = name.split("-")[1];
+                debugger;
+                let done = await apiModule.deleteSelectionsFromDatabase(pageKey, rec.id)
+                if (!done) {
+                    console.log("An error occurred while deleting your selection");
+                    return
+                }
+                notificationsModule.create("Success", "Your changes have been saved")
+            }
+
+            rec.clearSpawnedNodes()
+            rectangles.remove(i)
         }
     }
 
@@ -308,7 +323,6 @@ var selectionsModule = (function () {
         load: loadRectangle,
         onClick: onClickFunction,
         deleteSelection: deleteSelection,
-        deleteAllSelections, deleteAllSelections,
         refreshSelectionNodes: redrawSelectionNodes,
     };
 })()

@@ -56,9 +56,9 @@ var apiModule = (function () {
      * Load external selections from the database, and return a promise.
      * @returns {Promise<any>}
      */
-    function loadSelectionsFromDatabase() {
+    function loadFromAPI() {
         return new Promise((resolve, reject) => {
-            let url = `/selection?documentUUID=${getDocumentId()}`
+            let url = `/selection/?documentUUID=${getDocumentId()}`
             let promise = fetch(url, {
                 method: "GET", cache: "default",
             })
@@ -69,6 +69,16 @@ var apiModule = (function () {
                 resolve(selectionData)
             }).catch(reason => reject(reason))
         })
+    }
+
+    async function deleteSelectionsFromDatabase(pageKey, selectionUUID) {
+        let url = `/selection/?selectionUUID=${selectionUUID}`
+        let promise = fetch(url, {
+            method: "DELETE", cache: "no-cache",
+        })
+
+        let res = await promise;
+        return res.ok;
     }
 
     let cooldown = false;
@@ -87,7 +97,7 @@ var apiModule = (function () {
                 return undefined;
             });
 
-            if (!res){
+            if (!res) {
                 return
             }
 
@@ -123,9 +133,9 @@ var apiModule = (function () {
     return {
         getDocumentId: getDocumentId,
         convertSelectionMapToDTO: convertSelectionMapToDTO,
-        saveSelectionsToDatabase: saveSelectionsToDatabase,
-        load: loadSelectionsFromDatabase,
-        save: save
+        deleteSelectionsFromDatabase: deleteSelectionsFromDatabase,
+        load: loadFromAPI,
+        save: saveToAPI
     }
 })
 ()
