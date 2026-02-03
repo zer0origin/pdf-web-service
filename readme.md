@@ -46,3 +46,9 @@ The service will be available at: `http://localhost:8080` by default.
 if you need to kill a process already running use ``lsof -i tcp:8080 | grep -o -E '[0-9]{4,}' | xargs kill -9``
 
 > ⚠️ Note: This service depends on internal services (`pdf-api-service`, `pdf-data-service`) and will require them to be running for full functionality.
+
+## Functionality
+## User Management
+
+### Upload documents
+YOu can upload documents via the web application, once logged in.
