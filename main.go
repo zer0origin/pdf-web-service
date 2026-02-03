@@ -84,6 +84,7 @@ func main() {
 	router.GET("/viewer/images/:uid", middleware.RequireAuthenticated, viewerController.GetImages)
 	router.POST("/selection/bulk/", middleware.RequireAuthenticated, viewerController.UploadSelections)
 	router.GET("/selection/", middleware.RequireAuthenticated, viewerController.LoadSelections)
+	router.DELETE("/selection/", middleware.RequireAuthenticated, viewerController.DeleteSelection)
 
 	registerController := register.RegistrationController{
 		CreatedUserRedirect: "/",

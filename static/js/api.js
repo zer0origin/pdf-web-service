@@ -56,9 +56,9 @@ var apiModule = (function () {
      * Load external selections from the database, and return a promise.
      * @returns {Promise<any>}
      */
-    function loadSelectionsFromDatabase() {
+    function loadFromAPI() {
         return new Promise((resolve, reject) => {
-            let url = `/selection?documentUUID=${getDocumentId()}`
+            let url = `/selection/?documentUUID=${getDocumentId()}`
             let promise = fetch(url, {
                 method: "GET", cache: "default",
             })
@@ -71,8 +71,18 @@ var apiModule = (function () {
         })
     }
 
+    async function deleteSelectionsFromDatabase(pageKey, selectionUUID) {
+        let url = `/selection/?selectionUUID=${selectionUUID}`
+        let promise = fetch(url, {
+            method: "DELETE", cache: "no-cache",
+        })
+
+        let res = await promise;
+        return res.ok;
+    }
+
     let cooldown = false;
-    async function save() {
+    async function saveToAPI() {
         const data = selectionsModule.map;
         const dataToTransfer = convertSelectionMapToDTO(data);
         if (dataToTransfer.length <= 0) {
@@ -87,7 +97,7 @@ var apiModule = (function () {
                 return undefined;
             });
 
-            if (!res){
+            if (!res) {
                 return
             }
 
@@ -123,9 +133,9 @@ var apiModule = (function () {
     return {
         getDocumentId: getDocumentId,
         convertSelectionMapToDTO: convertSelectionMapToDTO,
-        saveSelectionsToDatabase: saveSelectionsToDatabase,
-        load: loadSelectionsFromDatabase,
-        save: save
+        deleteSelectionsFromDatabase: deleteSelectionsFromDatabase,
+        load: loadFromAPI,
+        save: saveToAPI
     }
 })
 ()
