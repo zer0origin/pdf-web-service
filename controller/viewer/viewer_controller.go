@@ -63,6 +63,7 @@ func (t GinViewer) GetImages(c *gin.Context) {
 	cookieStr, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUid + " not found")
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
