@@ -33,7 +33,8 @@ func (t GinViewer) GetViewer(c *gin.Context) {
 	documentUid := c.Param("uid")
 	_, err := uuid.Parse(documentUid)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse uid"})
+		_ = c.Error(errors.New("failed to parse uid"))
+
 		return
 	}
 
@@ -44,19 +45,19 @@ func (t GinViewer) GetImages(c *gin.Context) {
 	documentUid := c.Param("uid")
 	_, err := uuid.Parse(documentUid)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse uid"})
+		_ = c.Error(errors.New("failed to parse uid"))
 		return
 	}
 
 	token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
 
 	ownerUid, err := token.Claims.GetSubject()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
 
@@ -109,7 +110,7 @@ func (t GinViewer) GetImages(c *gin.Context) {
 			if err != nil {
 				fmt.Println("Failed to create user meta")
 				_ = instance.SendMessage(clientId, "Failed to create user meta.")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve document meta"})
+				_ = c.Error(errors.New("failed to retrieve document meta"))
 				return
 			}
 
@@ -118,8 +119,7 @@ func (t GinViewer) GetImages(c *gin.Context) {
 			return
 		}
 
-		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve document meta"})
+		_ = c.Error(err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func (t GinViewer) UploadSelections(c *gin.Context) {
 	//TODO: Check that the user has access to this document, before adding the selections.
 	str, err := t.JesrApi.AddSelectionsBulk(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save selection data"})
+		_ = c.Error(errors.New("failed to save selection data"))
 		return
 	}
 
@@ -169,7 +169,7 @@ func (t GinViewer) LoadSelections(c *gin.Context) {
 	//TODO: Check that the user has access to this document, before adding the selections.
 	str, err := t.JesrApi.GetSelectionListString(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load selection data"})
+		_ = c.Error(errors.New("failed to load selection data"))
 		return
 	}
 
@@ -179,7 +179,7 @@ func (t GinViewer) LoadSelections(c *gin.Context) {
 func (t GinViewer) DeleteSelection(c *gin.Context) {
 	err := t.JesrApi.DeleteSelection(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save selection data"})
+		_ = c.Error(errors.New("failed to save selection data"))
 		return
 	}
 

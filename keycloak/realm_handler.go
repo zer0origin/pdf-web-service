@@ -65,7 +65,7 @@ func (t *RealmHandler) SendLoginAuthAttemptWithPasswordAndUsername(username, pas
 
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return TokenResponse{}, fmt.Errorf("error creating new request: %s", err)
+		return TokenResponse{}, fmt.Errorf("error creating new request: %w", err)
 	}
 
 	request, err := t.handleLoginAuthRequest(req)
@@ -80,7 +80,7 @@ func (t *RealmHandler) SendLoginAuthAttemptWithRefreshToken(refreshToken string)
 
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return TokenResponse{}, fmt.Errorf("error creating new request: %s", err)
+		return TokenResponse{}, fmt.Errorf("error creating new request: %w", err)
 	}
 
 	request, err := t.handleLoginAuthRequest(req)
@@ -98,7 +98,7 @@ func (t *RealmHandler) handleLoginAuthRequest(req *http.Request) (TokenResponse,
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return TokenResponse{}, fmt.Errorf("error sending http request: %s", err)
+		return TokenResponse{}, fmt.Errorf("error sending http request: %w", err)
 	}
 	defer res.Body.Close()
 
@@ -108,7 +108,7 @@ func (t *RealmHandler) handleLoginAuthRequest(req *http.Request) (TokenResponse,
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return TokenResponse{}, fmt.Errorf("error reading http response: %s", err)
+		return TokenResponse{}, fmt.Errorf("error reading http response: %w", err)
 	}
 
 	token := &TokenResponse{}

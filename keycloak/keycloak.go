@@ -27,18 +27,21 @@ type Api struct {
 var AccessTokenKey = "accessToken"
 var IdTokenKey = "idToken"
 var RefreshTokenKey = "refreshToken"
+
 var InvalidToken = errors.New("token was not provided or invalid")
+var FailedToRetrieveFromKeycloak = errors.New("failed to retrieve information with keycloak")
+var TokenParseError = errors.New("failed to parse token")
 
 // AuthenticateJwtToken Parse a token after validating its authenticity, if invalid then return a blank token.
 func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 	keyStr, err := t.GetSigningKey()
 	if err != nil {
-		return jwt.Token{}, fmt.Errorf("failed to get public key from keyclaok server: %s %s", err.Error(), token)
+		return jwt.Token{}, fmt.Errorf("public signing key: %w: %w", FailedToRetrieveFromKeycloak, err)
 	}
 
 	pem, err := jwt.ParseRSAPublicKeyFromPEM([]byte(keyStr))
 	if err != nil {
-		return jwt.Token{}, fmt.Errorf("failed to parse token: %s %s", err.Error(), token)
+		return jwt.Token{}, fmt.Errorf("%w: %w", InvalidToken, err)
 	}
 
 	tempClaim := &jwt.RegisteredClaims{}
@@ -46,7 +49,7 @@ func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 		return pem, nil
 	})
 	if err != nil {
-		return jwt.Token{}, fmt.Errorf("failed to parse token: %s %s", err.Error(), token)
+		return jwt.Token{}, fmt.Errorf("%w: %w", InvalidToken, err)
 	}
 
 	if !withClaims.Valid {
@@ -55,12 +58,12 @@ func (t Api) AuthenticateJwtToken(token string) (jwt.Token, error) {
 	return *withClaims, nil
 }
 
-// ParseTokenUnverified Assume the token is authentic and parse it without checking authenticity.
+// ParseTokenUnverified Assume the token is valid and parse it without checking authenticity. Use this method if the token has already been checked, and it is safe to assume that the token is still valid.
 func (t Api) ParseTokenUnverified(token string) (jwt.Token, error) {
 	tempClaim := &jwt.RegisteredClaims{}
 	unverified, _, err := jwt.NewParser().ParseUnverified(token, tempClaim)
 	if err != nil {
-		return jwt.Token{}, err
+		return jwt.Token{}, fmt.Errorf("%w, %w", TokenParseError, err)
 	}
 
 	return *unverified, nil
