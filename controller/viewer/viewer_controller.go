@@ -60,11 +60,9 @@ func (t GinViewer) GetImages(c *gin.Context) {
 		return
 	}
 
-	cookieStr, err := c.Cookie("client_id")
+	clientId, err := c.Cookie("client_id")
 	if err != nil {
-		fmt.Println("Cookie for user " + ownerUid + " not found")
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		return
+		fmt.Println("Client ID for user " + ownerUid + " not found")
 	}
 
 	var offset uint32 = 0
@@ -99,7 +97,7 @@ func (t GinViewer) GetImages(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, jesr.GetMetaNotFoundError) {
 			fmt.Println("User meta data not found. Creating now!")
-			_ = NotificationService.GetServiceInstance().SendMessage(cookieStr, "User meta data not found! Attempting to create that now.")
+			_ = NotificationService.GetServiceInstance().SendMessage(clientId, "User meta data not found! Attempting to create that now.")
 
 			err := t.JesrApi.AddMeta(jesr.AddMetaRequest{
 				DocumentUUID: uuid.MustParse(documentUid),
@@ -107,9 +105,9 @@ func (t GinViewer) GetImages(c *gin.Context) {
 			})
 			if err != nil {
 				fmt.Println("Failed to create user meta")
-				_ = NotificationService.GetServiceInstance().SendMessage(cookieStr, "Failed to create user meta.")
+				_ = NotificationService.GetServiceInstance().SendMessage(clientId, "Failed to create user meta.")
 			} else {
-				_ = NotificationService.GetServiceInstance().SendMessage(cookieStr, "Successfully created user meta.")
+				_ = NotificationService.GetServiceInstance().SendMessage(clientId, "Successfully created user meta.")
 
 				t.GetViewer(c)
 				return
