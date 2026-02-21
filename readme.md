@@ -1,4 +1,4 @@
-# 📄 pdf-web-service
+# pdf-web-service
 **pdf-web-service** is a lightweight web server that hosts the user interface for interacting with internal PDF services. It is designed as a Single Page Application (SPA) and provides a responsive and modern user experience using **Go templates** and **HTMX**.
 
 ## Features
@@ -34,7 +34,7 @@ pdf-web-service (UI Layer, Toast Notification, Web API)
 
 ## Toast Notification Endpoint
 The server provides a dedicated endpoint that enables toast-style notifications. These are managed across **all active sessions 
-and users**. This allows for system-wide alerts, updates, and feedback messages without requiring full page reloads.
+and users**. This allows for system-wide alerts, updates, and feedback messages without requiring full page reloads. This system is optional, the application should work flawlessly without a connect to the endpoint. However automatic reloads might not always work as intended.
 
 ## Development
 ```bash
@@ -45,7 +45,7 @@ The service will be available at: `http://localhost:8080` by default.
 
 if you need to kill a process already running use ``lsof -i tcp:8080 | grep -o -E '[0-9]{4,}' | xargs kill -9``
 
-> ⚠️ Note: This service depends on internal services (`pdf-api-service`, `pdf-data-service`) and will require them to be running for full functionality.
+> ⚠️ Note: This service depends on internal services (`pdf-api-service`, `pdf-data-service`) and will require them, as well as `keycloak` and `postgres` to be running for the web app to function.
 
 ## Functionality
 ## User Management
