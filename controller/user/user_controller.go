@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -126,7 +125,7 @@ func (t GinUser) Upload(c *gin.Context) {
 		ownerTypeString, ownerTypeStringPresent := c.GetPostForm("ownerType")
 
 		if !baseStringPresent || !documentTilePresent || !ownerTypeStringPresent {
-			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("missing required form values")})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing required form values"})
 			return
 		}
 
@@ -155,14 +154,14 @@ func (t GinUser) Upload(c *gin.Context) {
 		}
 
 		if uploadRequest.OwnerType != 1 {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errors.New("owner type unsupported")})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "owner type unsupported"})
 			return
 		}
 
 		uploadRequest.OwnerUUID = uuid.MustParse(subject)
 		clientUid, err := c.Cookie("client_id")
 		if err != nil {
-			fmt.Println("Cookie for user " + subject + " not found")
+			fmt.Println("client_id for user " + subject + " not found")
 		}
 
 		instance := NotificationService.GetServiceInstance()
@@ -184,10 +183,6 @@ func (t GinUser) Upload(c *gin.Context) {
 			}
 
 			results <- t.JesrApi.AddMeta(metaRequest)
-
-			if clientUid == "" {
-				c.Redirect(http.StatusFound, "/")
-			}
 		}()
 
 		select {
@@ -195,10 +190,16 @@ func (t GinUser) Upload(c *gin.Context) {
 			if err != nil {
 				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
 				_ = instance.SendMessage(clientUid, "Error uploading document!")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error uploading document"})
 				return
 			}
 
+			if clientUid == "" {
+				c.Redirect(http.StatusFound, "/")
+				return
+			}
 			_ = instance.SendEvent(clientUid, "DocumentUpload", "Success")
+			c.Status(http.StatusOK)
 		}
 
 		return
@@ -226,7 +227,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	cookieStr, err := c.Cookie("client_id")
+	clientUid, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUuidStr + " not found")
 		c.Redirect(http.StatusFound, "/")
@@ -235,7 +236,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 
 	resultsChannel := make(chan error)
 	go func() {
-		_ = NotificationService.GetServiceInstance().SendMessage(cookieStr, "Deleting document")
+		_ = NotificationService.GetServiceInstance().SendMessage(clientUid, "Deleting document")
 		resultsChannel <- t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
 	}()
 
@@ -243,14 +244,18 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	case err = <-resultsChannel:
 		instance := NotificationService.GetServiceInstance()
 		if err != nil {
-			_ = NotificationService.GetServiceInstance().SendEvent(cookieStr, "errorNotif", "Failed to delete document!")
+			_ = NotificationService.GetServiceInstance().SendEvent(clientUid, "errorNotif", "Failed to delete document!")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete document!"})
+			fmt.Println(err.Error()) //TODO: Logger!
+			return
 		}
 
-		instance.SendEventToAllInstancesOfUser(cookieStr, "DocumentDelete", "Success")
-	}
-
-	if err != nil {
-		fmt.Println(err.Error())
+		if clientUid == "" {
+			c.Redirect(http.StatusFound, "/")
+			return
+		}
+		_ = instance.SendEvent(clientUid, "DocumentDelete", "Success")
+		c.Status(http.StatusOK)
 	}
 }
 

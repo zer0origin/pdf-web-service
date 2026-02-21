@@ -93,25 +93,29 @@ func (t GinViewer) GetImages(c *gin.Context) {
 		offset = 0
 	}
 
+	instance := NotificationService.GetServiceInstance()
+
 	meta, err := t.JesrApi.GetMeta(documentUid, ownerUid, offset, limit)
 	if err != nil {
 		if errors.Is(err, jesr.GetMetaNotFoundError) {
 			fmt.Println("User meta data not found. Creating now!")
-			_ = NotificationService.GetServiceInstance().SendMessage(clientId, "User meta data not found! Attempting to create that now.")
+			_ = instance.SendMessage(clientId, "User meta data not found! Attempting to create that now.")
 
 			err := t.JesrApi.AddMeta(jesr.AddMetaRequest{
 				DocumentUUID: uuid.MustParse(documentUid),
 				OwnerUUID:    uuid.MustParse(ownerUid),
 			})
+
 			if err != nil {
 				fmt.Println("Failed to create user meta")
-				_ = NotificationService.GetServiceInstance().SendMessage(clientId, "Failed to create user meta.")
-			} else {
-				_ = NotificationService.GetServiceInstance().SendMessage(clientId, "Successfully created user meta.")
-
-				t.GetViewer(c)
+				_ = instance.SendMessage(clientId, "Failed to create user meta.")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve document meta"})
 				return
 			}
+
+			_ = instance.SendMessage(clientId, "Successfully created user meta.")
+			t.GetViewer(c)
+			return
 		}
 
 		fmt.Println(err.Error())
