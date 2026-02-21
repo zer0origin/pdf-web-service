@@ -81,7 +81,13 @@ func (t *NotificationDispatcher) Broadcast(msg string) {
 	}
 }
 
+var UidCannotBeEmpty = errors.New("uid must not be null")
+
 func (t *NotificationDispatcher) SendMessage(uid, msg string) error {
+	if uid == "" {
+		return UidCannotBeEmpty
+	}
+
 	notificationChannel, ok := t.UserNotifications[uid]
 	if !ok {
 		return NoNotificationChannel
