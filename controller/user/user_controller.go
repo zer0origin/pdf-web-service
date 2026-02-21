@@ -160,18 +160,16 @@ func (t GinUser) Upload(c *gin.Context) {
 		}
 
 		uploadRequest.OwnerUUID = uuid.MustParse(subject)
-		cookieStr, err := c.Cookie("client_id")
+		clientUid, err := c.Cookie("client_id")
 		if err != nil {
 			fmt.Println("Cookie for user " + subject + " not found")
-			c.Redirect(http.StatusFound, "/")
-			return
 		}
 
 		instance := NotificationService.GetServiceInstance()
 
 		results := make(chan error)
 		go func() {
-			_ = instance.SendMessage(cookieStr, "Uploading document!")
+			_ = instance.SendMessage(clientUid, "Uploading document!")
 			docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
 			if err != nil {
 				results <- err
@@ -186,17 +184,21 @@ func (t GinUser) Upload(c *gin.Context) {
 			}
 
 			results <- t.JesrApi.AddMeta(metaRequest)
+
+			if clientUid == "" {
+				c.Redirect(http.StatusFound, "/")
+			}
 		}()
 
 		select {
 		case err = <-results:
 			if err != nil {
 				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
-				_ = instance.SendMessage(cookieStr, "Error uploading document!")
+				_ = instance.SendMessage(clientUid, "Error uploading document!")
 				return
 			}
 
-			instance.SendEventToAllInstancesOfUser(cookieStr, "DocumentUpload", "Success")
+			instance.SendEvent(clientUid, "DocumentUpload", "Success")
 		}
 
 		return
@@ -272,8 +274,10 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 
 	subject, err := token.Claims.GetSubject()
 	if err != nil {
+		_, _ = fmt.Fprint(c.Writer, fmt.Sprintf("event: refresh\ndata: %s\n\n", "Token Rejected"))
 		return
 	}
+
 	cookieStr, err := c.Cookie("client_id")
 	if cookieStr == "" {
 		fmt.Println("Creating new client_id")
@@ -282,11 +286,11 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
 
 		_, err := fmt.Fprint(c.Writer, "")
+		c.Writer.Flush()
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		c.Writer.Flush()
 	}
 
 	notificationService := NotificationService.GetServiceInstance()
@@ -309,7 +313,6 @@ func (t GinUser) PushNotifications(c *gin.Context) {
 			c.Writer.Flush()
 		case <-clientGone:
 			fmt.Println("Client has disconnected!")
-
 			return
 		}
 	}
