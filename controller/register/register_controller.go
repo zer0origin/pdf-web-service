@@ -2,11 +2,12 @@ package register
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/mail"
 	"pdf_service_web/keycloak"
 	models2 "pdf_service_web/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RegistrationController struct {
@@ -22,13 +23,13 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 		password, _ := c.GetPostForm("password")
 
 		if username == "" || password == "" || email == "" {
-			errorToSend := models2.BasicError{ErrorMessage: "Fill in all text boxes!"}
+			errorToSend := models2.ErrorRenderedForUser{ErrorMessage: "Fill in all text boxes!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		if !validEmail(email) {
-			errorToSend := models2.BasicError{ErrorMessage: "Invalid email address!"}
+			errorToSend := models2.ErrorRenderedForUser{ErrorMessage: "Invalid email address!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
@@ -37,7 +38,7 @@ func (t RegistrationController) RegisterHandle(c *gin.Context) {
 		err := t.KeycloakApi.CreateNewUserWithPassword(username, email, password, true, false)
 		if err != nil {
 			fmt.Println(err.Error())
-			errorToSend := models2.BasicError{ErrorMessage: err.Error()}
+			errorToSend := models2.ErrorRenderedForUser{ErrorMessage: err.Error()}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}

@@ -8,7 +8,7 @@ import (
 var lock = &sync.Mutex{}
 var singleInstance *GinLogin
 
-func GetControllerInstance() *GinLogin {
+func GetControllerInstance() *GinLogin { //TODO: REMOVE!
 	if singleInstance == nil {
 		lock.Lock()
 		defer lock.Unlock()

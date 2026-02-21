@@ -197,7 +197,7 @@ func (t Api) GetMeta(documentUid, ownerUid string, offset, limit uint32) (models
 	return *data, nil
 }
 
-// AddSelectionsBulk Proxies request through to API server. - TODO: Add checks
+// AddSelectionsBulk Proxies request through to API server. - TODO: Add permission checks
 func (t Api) AddSelectionsBulk(c *gin.Context) (string, error) {
 	url := fmt.Sprintf("%s/api/v1/selections/bulk", t.BaseUrl)
 	method := "POST"
@@ -226,7 +226,7 @@ func (t Api) AddSelectionsBulk(c *gin.Context) (string, error) {
 	return string(bytes), nil
 }
 
-// GetSelectionListString Proxies request through to API server. - TODO: Add checks
+// GetSelectionListString Proxies request through to API server. - TODO: Add permission checks
 func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
 	queryStr := c.Request.URL.RawQuery
 	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
@@ -256,7 +256,7 @@ func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
 	return string(bytes), nil
 }
 
-// DeleteSelection Proxies request through to API server. - TODO: Add checks, add bulk.
+// DeleteSelection Proxies request through to API server. - TODO: Add permission checks.
 func (t Api) DeleteSelection(c *gin.Context) error {
 	queryStr := c.Request.URL.RawQuery
 	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
