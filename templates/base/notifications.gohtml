@@ -15,11 +15,6 @@
             }
 
             document.body.addEventListener('htmx:sseMessage', function (e) {
-                console.log("Message received from notification system:")
-                console.log(e)
-                console.log(e.detail)
-                console.log(e.detail.data)
-                console.log("----------------------------------")
                 let messageEvnt = e.detail
                 let typeEvnt = messageEvnt.type
 

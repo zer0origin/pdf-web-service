@@ -44,12 +44,12 @@ function htmxUploadContents(event) {
         return;
     }
 
-    if (fileData.type !== "application/pdf"){
+    if (fileData.type !== "application/pdf") {
         reset()
     }
 
     event.detail.formData.append("documentBase64String", window.tempData);
-    event.detail.formData.append("documentTitle", fileData.name.slice(0,fileData.name.length-4));
+    event.detail.formData.append("documentTitle", fileData.name.slice(0, fileData.name.length - 4));
     event.detail.formData.append("ownerType", "1");
 }
 
@@ -60,7 +60,7 @@ async function htmxConfirmEvent(event) {
         return;
     }
 
-    if (fileData.type !== "application/pdf"){
+    if (fileData.type !== "application/pdf") {
         reset()
     }
 
@@ -73,6 +73,63 @@ async function htmxConfirmEvent(event) {
         reset();
     } catch (error) {
         console.error("Error preparing file for upload:", error);
+    }
+}
+
+async function onClick() {
+    if (!isFileSelected()) {
+        openFileBrowser();
+        return
+    }
+
+    let fileData = window.filesListElement.files[0];
+    if (!fileData) {
+        reset()
+        return;
+    }
+
+    if (fileData.type !== "application/pdf") {
+        reset()
+        return;
+    }
+
+    try {
+        let documentBase64String = await toBase64(fileData)
+        let documentTitle = fileData.name.slice(0, fileData.name.length - 4);
+        let ownerType = "1";
+
+        fetch("/user/upload", {
+            credentials: "same-origin",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                documentBase64String: documentBase64String,
+                documentTitle: documentTitle,
+                ownerType: ownerType
+            })
+        }).catch((err) => {
+            notificationsModule.createError("Error", "Failed to upload document!");
+            console.error(err)
+        }).then((res) => res.status).then(value => {
+            if (value === 200) {
+                return;
+            }
+
+            if (value === 302) {
+                window.location.reload();
+                return;
+            }
+
+            notificationsModule.createError("Error", "Something unexpected has happened!");
+        })
+
+
+    } catch (error) {
+        console.error("Error preparing file for upload:", error);
+    } finally {
+        reset();
     }
 }
 

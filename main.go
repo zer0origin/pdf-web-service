@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"pdf_service_web/controller"
@@ -111,6 +112,7 @@ func ErrorHandling(c *gin.Context) {
 	switch {
 	default:
 		c.JSON(http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		fmt.Println(err)
 		break
 	}
 }
