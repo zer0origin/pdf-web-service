@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"pdf_service_web/jesr"
