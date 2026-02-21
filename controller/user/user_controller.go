@@ -198,7 +198,7 @@ func (t GinUser) Upload(c *gin.Context) {
 				return
 			}
 
-			instance.SendEvent(clientUid, "DocumentUpload", "Success")
+			_ = instance.SendEvent(clientUid, "DocumentUpload", "Success")
 		}
 
 		return
