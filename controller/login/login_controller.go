@@ -52,14 +52,14 @@ func (t GinLogin) LoginAuthHandler(c *gin.Context) {
 		password, passPresent := c.GetPostForm("password")
 
 		if !userPresent || !passPresent || username == "" || password == "" {
-			errorToSend := models2.BasicError{ErrorMessage: "Fill in all text boxes!"}
+			errorToSend := models2.ErrorRenderedForUser{ErrorMessage: "Fill in all text boxes!"}
 			c.HTML(http.StatusUnprocessableEntity, "errorMessage", errorToSend)
 			return
 		}
 
 		authUser, err := t.Keycloak.SendLoginAuthAttemptWithPasswordAndUsername(username, password)
 		if err != nil {
-			errorToSend := models2.BasicError{ErrorMessage: "Incorrect username or password"}
+			errorToSend := models2.ErrorRenderedForUser{ErrorMessage: "Incorrect username or password"}
 			c.HTML(http.StatusUnauthorized, "errorMessage", errorToSend)
 			return
 		}
