@@ -254,7 +254,7 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	}
 }
 
-func (t GinUser) PushNotifications(c *gin.Context) {
+func (t GinUser) ToastNotifications(c *gin.Context) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
