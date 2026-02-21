@@ -137,5 +137,4 @@ var apiModule = (function () {
         load: loadFromAPI,
         save: saveToAPI
     }
-})
-()
+})()
