@@ -34,6 +34,7 @@ func main() {
 	router.Static("/css", "static/css")
 	router.Static("/images", "static/images")
 	router.Static("/js", "static/js")
+	router.Use(ErrorHandling)
 
 	adminHandler, err := keycloak.NewAdminHandler(realmHandler)
 	if err != nil {
@@ -55,6 +56,7 @@ func main() {
 		Keycloak:              keycloakAPI,
 		Middleware:            *middleware,
 	}
+
 	login.SetControllerInstance(loginController)
 	router.GET("/", loginController.BaseRender)
 	router.GET("/login", loginController.LoginRender)
@@ -94,6 +96,23 @@ func main() {
 	router.POST("/register", registerController.RegisterHandle)
 
 	log.Fatal(router.Run(":8080"))
+}
+
+func ErrorHandling(c *gin.Context) {
+	c.Next()
+
+	if len(c.Errors) <= 0 {
+		return
+	}
+
+	// Use the last error
+	err := c.Errors.Last().Err
+
+	switch {
+	default:
+		c.JSON(http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		break
+	}
 }
 
 func mustNotBeEmpty(errorHandle func(string), a ...string) {

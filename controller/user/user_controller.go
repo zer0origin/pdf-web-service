@@ -1,8 +1,8 @@
 package user
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"pdf_service_web/jesr"
 	"pdf_service_web/keycloak"
@@ -30,9 +30,10 @@ func (t GinUser) UserInfo(c *gin.Context) {
 	accessToken := c.GetString(keycloak.AccessTokenKey)
 	user, err := t.KeycloakApi.SendUserInfoRequest(accessToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
+
 	data := models.PageDefaults{
 		NavDetails:           &models.NavDetails{IsAuthenticated: true},
 		ContentDetails:       user,
@@ -49,7 +50,7 @@ type ContentDetails struct {
 func (t GinUser) UserDashboard(c *gin.Context) {
 	token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
-		fmt.Println(fmt.Errorf("failed to parse access token in user dashboard %s", err.Error()))
+		_ = c.Error(err)
 		c.SetCookie(keycloak.AccessTokenKey, "", -1, "", "", false, false)
 		c.SetCookie(keycloak.RefreshTokenKey, "", -1, "", "", false, false)
 		c.Redirect(http.StatusTemporaryRedirect, "/") //Login page
@@ -60,6 +61,7 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	if limitValue, present := c.GetQuery("limit"); present {
 		parseInt, err := strconv.ParseInt(limitValue, 10, 8)
 		if err != nil {
+			_ = c.Error(err)
 			return
 		}
 
@@ -70,6 +72,7 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	if offsetValue, present := c.GetQuery("offset"); present {
 		parseInt, err := strconv.ParseInt(offsetValue, 10, 8)
 		if err != nil {
+			_ = c.Error(err)
 			return
 		}
 
@@ -87,14 +90,16 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	subject, _ := token.Claims.GetSubject()
 	documentsOwnerByUser, err := t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
 	if err != nil {
-		log.Printf("failed to connect to database: %v", err.Error())
+		_ = c.Error(err)
+		return
 	}
 
 	if offset != 0 && len(documentsOwnerByUser) == 0 {
 		offset = 0
 		documentsOwnerByUser, err = t.JesrApi.GetDocumentsByOwnerUUID(uuid.MustParse(subject), limit, offset)
 		if err != nil {
-			log.Printf("failed to connect to database: %v", err.Error())
+			_ = c.Error(err)
+			return
 		}
 	}
 
@@ -143,13 +148,13 @@ func (t GinUser) Upload(c *gin.Context) {
 
 		token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			_ = c.Error(err)
 			return
 		}
 
 		subject, err := token.Claims.GetSubject()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			_ = c.Error(err)
 			return
 		}
 
@@ -190,11 +195,12 @@ func (t GinUser) Upload(c *gin.Context) {
 			if err != nil {
 				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
 				_ = instance.SendMessage(clientUid, "Error uploading document!")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error uploading document"})
+				_ = c.Error(errors.New("error uploading document"))
 				return
 			}
 
 			if clientUid == "" {
+				c.Request.Method = "GET"
 				c.Redirect(http.StatusFound, "/")
 				return
 			}
@@ -217,19 +223,21 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	}
 	token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
 
 	ownerUuidStr, err := token.Claims.GetSubject()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
 
 	clientUid, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUuidStr + " not found")
+
+		c.Request.Method = "GET"
 		c.Redirect(http.StatusFound, "/")
 		return
 	}
@@ -245,12 +253,12 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 		instance := NotificationService.GetServiceInstance()
 		if err != nil {
 			_ = NotificationService.GetServiceInstance().SendEvent(clientUid, "errorNotif", "Failed to delete document!")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete document!"})
-			fmt.Println(err.Error()) //TODO: Logger!
+			_ = c.Error(err)
 			return
 		}
 
 		if clientUid == "" {
+			c.Request.Method = "GET"
 			c.Redirect(http.StatusFound, "/")
 			return
 		}
@@ -260,6 +268,11 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 }
 
 func (t GinUser) ToastNotifications(c *gin.Context) {
+	c.Status(http.StatusInternalServerError)
+	if true {
+		return
+	}
+
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
