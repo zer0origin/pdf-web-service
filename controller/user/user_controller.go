@@ -309,7 +309,7 @@ func (t GinUser) ToastNotifications(c *gin.Context) {
 		fmt.Println("Creating new client_id")
 		nUUID := uuid.NewString()
 		cookieStr = fmt.Sprintf("%s.%s", subject, nUUID[len(nUUID)-12:])
-		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
+		c.SetCookie("client_id", cookieStr, -1, "/", "", false, false)
 
 		_, err := fmt.Fprint(c.Writer, "")
 		c.Writer.Flush()
