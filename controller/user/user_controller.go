@@ -122,96 +122,114 @@ func (t GinUser) UserDashboard(c *gin.Context) {
 	c.HTML(http.StatusOK, "userdashboard", data)
 }
 
+type UploadRequest struct {
+	BaseString      string `json:"documentBase64String"`
+	DocumentTile    string `json:"documentTitle"`
+	OwnerTypeString string `json:"ownerType"`
+}
+
 func (t GinUser) Upload(c *gin.Context) {
 	accept := c.Request.Header["Content-Type"][0]
+	var baseString, documentTile, ownerTypeString string
+	var baseStringPresent, documentTilePresent, ownerTypeStringPresent bool
+
 	if accept == "application/x-www-form-urlencoded" {
-		baseString, baseStringPresent := c.GetPostForm("documentBase64String")
-		documentTile, documentTilePresent := c.GetPostForm("documentTitle")
-		ownerTypeString, ownerTypeStringPresent := c.GetPostForm("ownerType")
+		baseString, baseStringPresent = c.GetPostForm("documentBase64String")
+		documentTile, documentTilePresent = c.GetPostForm("documentTitle")
+		ownerTypeString, ownerTypeStringPresent = c.GetPostForm("ownerType")
+	}
 
-		if !baseStringPresent || !documentTilePresent || !ownerTypeStringPresent {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing required form values"})
-			return
-		}
-
-		ownerType, err := strconv.Atoi(ownerTypeString)
+	if accept == "application/json" {
+		req := &UploadRequest{}
+		err := c.ShouldBindBodyWithJSON(req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			_ = c.Error(errors.New("failed to parse body"))
 			return
 		}
 
-		uploadRequest := jesr.UploadRequest{
-			DocumentBase64String: baseString,
-			OwnerType:            ownerType,
-			DocumentTitle:        documentTile,
-		}
+		baseString = req.BaseString
+		documentTile = req.DocumentTile
+		ownerTypeString = req.OwnerTypeString
 
-		token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
+		baseStringPresent = req.BaseString != ""
+		documentTilePresent = req.DocumentTile != ""
+		ownerTypeStringPresent = req.OwnerTypeString != ""
+	}
 
-		subject, err := token.Claims.GetSubject()
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
-
-		if uploadRequest.OwnerType != 1 {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "owner type unsupported"})
-			return
-		}
-
-		uploadRequest.OwnerUUID = uuid.MustParse(subject)
-		clientUid, err := c.Cookie("client_id")
-		if err != nil {
-			fmt.Println("client_id for user " + subject + " not found")
-		}
-
-		instance := NotificationService.GetServiceInstance()
-
-		results := make(chan error)
-		go func() {
-			_ = instance.SendMessage(clientUid, "Uploading document!")
-			docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
-			if err != nil {
-				results <- err
-				return
-			}
-
-			metaRequest := jesr.AddMetaRequest{
-				DocumentUUID:         docUUID,
-				OwnerUUID:            uploadRequest.OwnerUUID,
-				OwnerType:            uploadRequest.OwnerType,
-				DocumentBase64String: &uploadRequest.DocumentBase64String,
-			}
-
-			results <- t.JesrApi.AddMeta(metaRequest)
-		}()
-
-		select {
-		case err = <-results:
-			if err != nil {
-				fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
-				_ = instance.SendMessage(clientUid, "Error uploading document!")
-				_ = c.Error(errors.New("error uploading document"))
-				return
-			}
-
-			if clientUid == "" {
-				c.Request.Method = "GET"
-				c.Redirect(http.StatusFound, "/")
-				return
-			}
-			_ = instance.SendEvent(clientUid, "DocumentUpload", "Success")
-			c.Status(http.StatusOK)
-		}
-
+	if !baseStringPresent || !documentTilePresent || !ownerTypeStringPresent {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required form values"})
 		return
 	}
 
-	c.JSON(http.StatusBadRequest, "Unsupported accept header")
+	ownerType, err := strconv.Atoi(ownerTypeString)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	uploadRequest := jesr.UploadRequest{
+		DocumentBase64String: baseString,
+		OwnerType:            ownerType,
+		DocumentTitle:        documentTile,
+	}
+
+	token, err := t.KeycloakApi.ParseTokenUnverified(c.GetString(keycloak.AccessTokenKey))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	subject, err := token.Claims.GetSubject()
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	if uploadRequest.OwnerType != 1 {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "owner type unsupported"})
+		return
+	}
+
+	uploadRequest.OwnerUUID = uuid.MustParse(subject)
+	clientUid, err := c.Cookie("client_id")
+	if err != nil {
+		fmt.Println("client_id for user " + subject + " not found")
+	}
+
+	instance := NotificationService.GetServiceInstance()
+
+	_ = instance.SendMessage(clientUid, "Uploading document!")
+	docUUID, err := t.JesrApi.UploadDocument(uploadRequest)
+	if err != nil {
+		fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
+		_ = instance.SendMessage(clientUid, "Error uploading document!")
+		_ = c.Error(errors.New("error uploading document"))
+		return
+	}
+
+	metaRequest := jesr.AddMetaRequest{
+		DocumentUUID:         docUUID,
+		OwnerUUID:            uploadRequest.OwnerUUID,
+		OwnerType:            uploadRequest.OwnerType,
+		DocumentBase64String: &uploadRequest.DocumentBase64String,
+	}
+
+	err = t.JesrApi.AddMeta(metaRequest)
+	if err != nil {
+		fmt.Printf("Error uploading %s document: %s\n", subject, err.Error())
+		err = instance.SendMessage(clientUid, "Error uploading document!")
+		_ = c.Error(errors.New("error uploading document"))
+		return
+	}
+
+	if clientUid == "" {
+		c.Status(http.StatusFound)
+		return
+	}
+	_ = instance.SendEvent(clientUid, "DocumentUpload", "Success")
+	c.Status(http.StatusOK)
+	return
+
 }
 
 func (t GinUser) DeleteDocument(c *gin.Context) {
@@ -236,35 +254,25 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 	clientUid, err := c.Cookie("client_id")
 	if err != nil {
 		fmt.Println("Cookie for user " + ownerUuidStr + " not found")
+	}
 
-		c.Request.Method = "GET"
-		c.Redirect(http.StatusFound, "/")
+	instance := NotificationService.GetServiceInstance()
+	_ = instance.SendMessage(clientUid, "Deleting document")
+	err = t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
+
+	if err != nil {
+		_ = instance.SendEvent(clientUid, "errorNotif", "Failed to delete document!")
+		_ = c.Error(err)
 		return
 	}
 
-	resultsChannel := make(chan error)
-	go func() {
-		_ = NotificationService.GetServiceInstance().SendMessage(clientUid, "Deleting document")
-		resultsChannel <- t.JesrApi.DeleteDocuments(uid, uuid.MustParse(ownerUuidStr))
-	}()
-
-	select {
-	case err = <-resultsChannel:
-		instance := NotificationService.GetServiceInstance()
-		if err != nil {
-			_ = NotificationService.GetServiceInstance().SendEvent(clientUid, "errorNotif", "Failed to delete document!")
-			_ = c.Error(err)
-			return
-		}
-
-		if clientUid == "" {
-			c.Request.Method = "GET"
-			c.Redirect(http.StatusFound, "/")
-			return
-		}
-		_ = instance.SendEvent(clientUid, "DocumentDelete", "Success")
-		c.Status(http.StatusOK)
+	if clientUid == "" {
+		c.Status(http.StatusFound)
+		return
 	}
+
+	_ = instance.SendEvent(clientUid, "DocumentDelete", "Success")
+	c.Status(http.StatusOK)
 }
 
 func (t GinUser) ToastNotifications(c *gin.Context) {
@@ -301,7 +309,7 @@ func (t GinUser) ToastNotifications(c *gin.Context) {
 		fmt.Println("Creating new client_id")
 		nUUID := uuid.NewString()
 		cookieStr = fmt.Sprintf("%s.%s", subject, nUUID[len(nUUID)-12:])
-		c.SetCookie("client_id", cookieStr, 60*60*60*24, "/", "", false, false)
+		c.SetCookie("client_id", cookieStr, -1, "/", "", false, false)
 
 		_, err := fmt.Fprint(c.Writer, "")
 		c.Writer.Flush()

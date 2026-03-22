@@ -3,135 +3,126 @@ window.dropZoneText = document.getElementById('drop-zone-text');
 window.uploadContainer = document.getElementById('upload-container');
 window.filesListElement = document.getElementById('fileListButton');
 
-setup()
+var uploadModule = (function () {
+    function setup() {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            let a = (event) => {
+                event.preventDefault()
+            }
 
-function setup() {
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        let a = (event) => {
-            event.preventDefault()
-        }
+            if (eventName === "drop") {
+                window.dropZone.addEventListener(eventName, handleDrop, false);
+            }
 
-        if (eventName === "drop") {
-            window.dropZone.addEventListener(eventName, handleDrop, false);
-        }
+            window.dropZone.addEventListener(eventName, a)
+        });
 
-        window.dropZone.addEventListener(eventName, a)
-    });
-
-    reset()
-}
-
-function isFileSelected() {
-    return window.filesListElement.files[0] !== undefined
-}
-
-function openFileBrowser() {
-    window.filesListElement.click();
-}
-
-//USED BY HTMX
-function shouldSendRequest(event) {
-    if (!isFileSelected()) {
-        openFileBrowser();
-        event.preventDefault()
-    }
-}
-
-//USED BY HTMX
-function htmxUploadContents(event) {
-    let fileData = window.filesListElement.files[0];
-    if (!fileData) {
-        return;
-    }
-
-    if (fileData.type !== "application/pdf"){
         reset()
     }
 
-    event.detail.formData.append("documentBase64String", window.tempData);
-    event.detail.formData.append("documentTitle", fileData.name.slice(0,fileData.name.length-4));
-    event.detail.formData.append("ownerType", "1");
-}
+    async function onClick() {
+        if (!isFileSelected()) {
+            openFileBrowser();
+            return
+        }
 
-//USED BY HTMX
-async function htmxConfirmEvent(event) {
-    let fileData = window.filesListElement.files[0];
-    if (!fileData) {
-        return;
+        let fileData = window.filesListElement.files[0];
+        if (!fileData) {
+            reset()
+            return;
+        }
+
+        if (fileData.type !== "application/pdf") {
+            reset()
+            return;
+        }
+
+        try {
+            let documentBase64String = await toBase64(fileData)
+            let documentTitle = fileData.name.slice(0, fileData.name.length - 4);
+            documentModule.completePromiseThenCallback(
+                documentModule.uploadDocument(documentBase64String, documentTitle)
+            )
+        } catch (error) {
+            console.error("Error preparing file for upload:", error);
+        } finally {
+            reset();
+        }
     }
 
-    if (fileData.type !== "application/pdf"){
+    /**
+     *
+     * @param e {DragEvent}
+     */
+    function handleDrop(e) {
+        const files = e.dataTransfer.files;
+        const file = files[0]
+
+        if (file.type !== "application/pdf") {
+            return
+        }
+
+        window.filesListElement.files = e.dataTransfer.files
+        updateText(e)
+    }
+
+    function updateText(event) {
+        console.log(event)
+        const file = window.filesListElement.files[0]
+
+        if (!file) {
+            return
+        }
+
+        window.dropZoneText.textContent = `${file.name}`;
+    }
+
+    function hide() {
+        window.uploadContainer.style.display = "none"
+    }
+
+    function show() {
+        window.uploadContainer.style.display = "flex"
+    }
+
+    function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.toString().replace(/^data:(.*,)?/, ''));
+            reader.onerror = reject;
+        });
+    }
+
+    function reset() {
+        window.filesListElement.value = ""
+        window.dropZoneText.textContent = "Drag and drop pdf file here"
+        hide()
+    }
+
+    function toggleUploadPopup() {
+        if (window.uploadContainer.style.display === "none") {
+            show()
+            return
+        }
+
+        hide()
         reset()
     }
 
-    // Prevent the request from being issued immediately
-    event.preventDefault();
-
-    try {
-        window.tempData = await toBase64(fileData)
-        event.detail.issueRequest();
-        reset();
-    } catch (error) {
-        console.error("Error preparing file for upload:", error);
-    }
-}
-
-/**
- *
- * @param e {DragEvent}
- */
-function handleDrop(e) {
-    const files = e.dataTransfer.files;
-    const file = files[0]
-
-    if (file.type !== "application/pdf") {
-        return
+    function isFileSelected() {
+        return window.filesListElement.files[0] !== undefined
     }
 
-    window.filesListElement.files = e.dataTransfer.files
-    updateText(e)
-}
-
-function updateText(event) {
-    console.log(event)
-    const file = window.filesListElement.files[0]
-
-    if (!file) {
-        return
+    function openFileBrowser() {
+        window.filesListElement.click();
     }
 
-    window.dropZoneText.textContent = `${file.name}`;
-}
-
-function toggleUploadPopup() {
-    if (window.uploadContainer.style.display === "none") {
-        show()
-        return
+    return {
+        setup: setup,
+        onClick: onClick,
+        toggleUploadPopup: toggleUploadPopup,
+        updateText: updateText
     }
-
-    hide()
-    reset()
-}
-
-function hide() {
-    window.uploadContainer.style.display = "none"
-}
-
-function show() {
-    window.uploadContainer.style.display = "flex"
-}
-
-function toBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.toString().replace(/^data:(.*,)?/, ''));
-        reader.onerror = reject;
-    });
-}
-
-function reset() {
-    window.filesListElement.value = ""
-    window.dropZoneText.textContent = "Drag and drop pdf file here"
-    hide()
-}
+})()
+uploadModule.setup()

@@ -66,7 +66,7 @@ func (t GinLogin) LoginAuthHandler(c *gin.Context) {
 
 		c.SetCookie("accessToken", authUser.AccessToken, authUser.AccessExpiresIn, "/", "", false, false)
 		c.SetCookie("refreshToken", authUser.RefreshToken, authUser.RefreshExpiresIn, "/", "", false, false)
-		c.SetCookie("idToken", authUser.IdToken, authUser.RefreshExpiresIn, "/", "", false, false)
+		c.SetCookie("idToken", authUser.IdToken, authUser.RefreshExpiresIn, "/", "", false, false) //TODO: REMOVE
 		c.Header("HX-Redirect", t.AuthenticatedRedirect)
 		return
 	}

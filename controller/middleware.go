@@ -26,7 +26,7 @@ func (t GinMiddleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, 
 	fmt.Println("Refreshed token")
 	c.SetCookie("accessToken", token.AccessToken, token.AccessExpiresIn, "/", "", false, false)
 	c.SetCookie("refreshToken", token.RefreshToken, token.RefreshExpiresIn, "/", "", false, false)
-	c.SetCookie("idToken", token.IdToken, token.RefreshExpiresIn, "/", "", false, false)
+	c.SetCookie("idToken", token.IdToken, token.RefreshExpiresIn, "/", "", false, false) //TODO: REMOVE
 
 	return token.AccessToken, nil
 }

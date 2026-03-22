@@ -28,7 +28,7 @@
                         <a class="btn btn-sm btn-outline-dark" style="width: 49.14px" hx-headers='{"Accept": "text/html"}' hx-get="/user/?limit=15&offset={{.PageInfo.Offset}}">15</a>
                     {{end}}
                 </div>
-                <a onclick="toggleUploadPopup()" class="btn btn-sm btn-outline-primary">Upload</a>
+                <a onclick="uploadModule.toggleUploadPopup()" class="btn btn-sm btn-outline-primary">Upload</a>
             </div>
             <div id="data-container" class="d-flex flex-column justify-content-between align-items-center w-100" style="height: 586px">
                 <div class="d-flex flex-column align-items-center w-100">
@@ -38,7 +38,8 @@
 
                             <div class="d-flex gap-2">
                                 <a class="btn btn-sm btn-secondary" hx-get="/viewer/documents/{{.DocumentUUID}}">View</a>
-                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-swap="none" hx-trigger="click" hx-target="#document-{{.DocumentUUID}}" hx-delete="/user/documents/{{.DocumentUUID}}">Delete</a>
+                                <a class="btn btn-sm btn-danger" style="width: 64.11px" hx-swap="none" hx-trigger="click" hx-target="#document-{{.DocumentUUID}}" hx-delete="/user/documents/{{.DocumentUUID}}"
+                                   onclick="documentModule.completePromiseThenCallback(documentModule.deleteDocument(`{{.DocumentUUID}}`))">Delete</a>
                             </div>
                             <hr>
                         </div>
@@ -53,7 +54,7 @@
         {{else}}
             <div class="d-flex align-items-center align-items-center w-100">
                 <h3 class="m-0 w-100">No Documents Found</h3> <a class="btn btn-sm btn-outline-primary"
-                                                                 onclick="toggleUploadPopup()">Upload</a>
+                                                                 onclick="uploadModule.toggleUploadPopup()">Upload</a>
             </div>
         {{end}}
     </div>
@@ -65,7 +66,7 @@
         <div class="d-flex w-100">
             <span class="w-100"></span>
             <button class="bg-light m-0 p-0 position-absolute border-0"
-                    style="width: 25px; height: 25px; right: 0; color: red" onclick="toggleUploadPopup()">x
+                    style="width: 25px; height: 25px; right: 0; color: red" onclick="uploadModule.toggleUploadPopup()">x
             </button>
         </div>
         <div id="drop-zone" class="w-100"
@@ -73,15 +74,14 @@
             <span class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"
                   id="drop-zone-text"> Drag and drop pdf file here</span>
         </div>
-        <a id="customUploadButton" hx-swap="outerHTML" hx-swap-oob="none" hx-target="#documents"
-           hx-on::before-Request="shouldSendRequest(event)" hx-on::config-Request="htmxUploadContents(event)"
-           hx-on::confirm="htmxConfirmEvent(event)" hx-post="/user/upload"
+        <a id="customUploadButton" onclick="uploadModule.onClick()"
            class="btn btn-sm btn-outline-primary" style="right: 0; bottom: 5px">Upload files</a>
 
         <p>9MB Limit</p>
 
-        <input id="fileListButton" type="file" class="d-none" hx-on:input="updateText()">
+        <input id="fileListButton" type="file" class="d-none" hx-on:input="uploadModule.updateText()">
     </div>
 
     <script src="/js/upload.js"></script>
+    <script src="/js/document.js"></script>
 {{end}}
