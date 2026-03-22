@@ -276,11 +276,6 @@ func (t GinUser) DeleteDocument(c *gin.Context) {
 }
 
 func (t GinUser) ToastNotifications(c *gin.Context) {
-	//c.Status(http.StatusBadGateway)
-	//if true {
-	//	return
-	//}
-
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
