@@ -40,7 +40,7 @@ var uploadModule = (function () {
         try {
             let documentBase64String = await toBase64(fileData)
             let documentTitle = fileData.name.slice(0, fileData.name.length - 4);
-            documentModule.completeFunctionThenCallback(
+            documentModule.completePromiseThenCallback(
                 documentModule.uploadDocument(documentBase64String, documentTitle)
             )
         } catch (error) {

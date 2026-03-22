@@ -22,7 +22,7 @@ let documentModule = (function () {
          * @param callback {function()}
          * @param errorMsg {String}
          */
-        function completeFunctionThenCallback(promise, callback = refreshBasedOnHTTPCode, errorMsg = "FailedToResolvePromise") {
+        function completePromiseThenCallback(promise, callback = refreshBasedOnHTTPCode, errorMsg = "FailedToResolvePromise") {
             if (!promise.then) {
                 try {
                     callback(promise)
@@ -66,7 +66,7 @@ let documentModule = (function () {
         return {
             deleteDocument: deleteDocument,
             uploadDocument: uploadDocument,
-            completeFunctionThenCallback: completeFunctionThenCallback
+            completePromiseThenCallback: completePromiseThenCallback
         }
     }
 
