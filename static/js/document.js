@@ -22,7 +22,7 @@ let documentModule = (function () {
          * @param callback {function()}
          * @param errorMsg {String}
          */
-        function completePromiseThenCallback(promise, callback = refreshBasedOnHTTPCode, errorMsg = "FailedToResolvePromise") {
+        function completePromiseThenCallback(promise, callback = refreshBasedOnHTTPCode, errorMsg = "Failed to complete action") {
             if (!promise.then) {
                 try {
                     callback(promise)
