@@ -226,7 +226,7 @@ func (t Api) AddSelectionsBulk(c *gin.Context) (string, error) {
 	return string(bytes), nil
 }
 
-// GetSelectionListString Proxies request through to API server. - TODO: Add permission checks
+// GetSelectionListString Proxies request through the API server. - TODO: Add permission checks
 func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
 	queryStr := c.Request.URL.RawQuery
 	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
