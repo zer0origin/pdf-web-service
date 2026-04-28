@@ -21,6 +21,161 @@ Point = class Point {
     }
 }
 
+let selectionsModule = (function () {
+    Array.prototype.remove = function (from, to) {
+        var rest = this.slice((to || from) + 1 || this.length);
+        this.length = from < 0 ? this.length + from : from;
+        return this.push.apply(this, rest);
+    };
+
+    /**
+     *
+     * @type {Map<string, Array<Rectangle>>}
+     */
+    let selectionsMap = new Map();
+
+    /**
+     * Handle click events for selections.
+     * @param {MouseEvent} event - The mouse event object.
+     */
+    function onClickFunction(event) {
+        const cursorX = event.pageX; //get cursorX relative to whole page.
+        const cursorY = event.pageY; //get cursorY relative to whole page.
+
+        let imagePos = Point.getPositionRelativeToDocument(event.target)
+        let zoomLevel = zoomModule.getZoomLevel();
+        const imageCoordsRelativeToSelf = new Point((cursorX - imagePos.left) / zoomLevel, (cursorY - imagePos.top) / zoomLevel)
+
+        if (imageCoordsRelativeToSelf.x < 0) {
+            imageCoordsRelativeToSelf.x = 0
+        }
+
+        if (imageCoordsRelativeToSelf.y < 0) {
+            imageCoordsRelativeToSelf.y = 0
+        }
+
+        let name = String(event.target.id);
+        let pageKey = name.split("-")[1];
+        let spawnDiv = `selection-${pageKey}`
+
+        let present = selectionsMap.has(pageKey)
+        if (!present) {
+            selectionsMap.set(pageKey, [])
+        }
+
+        let recArr = selectionsMap.get(pageKey);
+        if (recArr.length <= 0) {
+            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
+            rec.p1 = imageCoordsRelativeToSelf;
+            recArr.push(rec)
+            rec.spawnP1()
+            return
+        }
+
+        let recData = recArr[recArr.length - 1];
+        if (recData.p2 === undefined) {
+            recData.p2 = imageCoordsRelativeToSelf;
+            recData.spawnP2()
+            recData.clearSpawnedPoints();
+            recData.spawnRectangle()
+        } else {
+            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
+            rec.p1 = imageCoordsRelativeToSelf;
+            recArr.push(rec)
+            rec.spawnP1()
+        }
+    }
+
+    /**
+     * @param pageKey {string}
+     * @param rec {Rectangle}
+     */
+    function pushSelectionToMap(pageKey, rec) {
+        let present = selectionsMap.has(pageKey)
+        if (!present) {
+            selectionsMap.set(pageKey, [])
+        }
+
+        let recArr = selectionsMap.get(pageKey);
+        recArr.push(rec);
+    }
+
+    /**
+     * Spawns a rectangle on an image.
+     * @param pageKey {string}
+     * @param p1 {Point}
+     * @param p2 {Point}
+     * @param id {string} The ID of the rectangle
+     */
+    function loadRectangle(pageKey, p1, p2, id = undefined) {
+        let spawnDiv = document.getElementById(`selection-${pageKey}`);
+        let imageDiv = document.getElementById(`image-${pageKey}`);
+
+        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2, id, true);
+        pushSelectionToMap(pageKey, rec);
+        rec.spawnRectangle();
+    }
+
+    async function deleteSelection(key, id) {
+        let rectangles = selectionsMap.get(key);
+
+        for (let i = 0; i < rectangles.length; i++) {
+            let rec = rectangles[i];
+            if (rec.id !== id) {
+                continue;
+            }
+
+            if (rec.isExternal) {
+                let name = String(rec.spawnDiv);
+                let pageKey = name.split("-")[1];
+                debugger;
+                let done = await apiModule.deleteSelection(pageKey, rec.id)
+                if (!done) {
+                    console.log("An error occurred while deleting your selection");
+                    return
+                }
+                notificationsModule.create("Success", "Your changes have been saved")
+            }
+
+            rec.clearSpawnedNodes()
+            rectangles.remove(i)
+        }
+    }
+
+    function deleteAllSelections() {
+        selectionsModule.map.forEach(pageArr => {
+            pageArr.forEach(rec => {
+                rec.clearSpawnedNodes()
+            })
+        })
+
+        selectionsMap = new Map();
+    }
+
+    /**
+     * Redraw selection nodes.
+     */
+    function redrawSelectionNodes() {
+        if (selectionsMap.size <= 0) {
+            return
+        }
+
+        selectionsMap.forEach((recArr, i) => {
+            recArr.forEach((rec, j) => {
+                rec.clearSpawnedNodes();
+                rec.spawnRectangle()
+            })
+        })
+    }
+
+    return {
+        map: selectionsMap,
+        load: loadRectangle,
+        onClick: onClickFunction,
+        deleteSelection: deleteSelection,
+        refreshSelectionNodes: redrawSelectionNodes,
+    };
+})();
 Rectangle = class Rectangle {
     static lastId = 0
     /**
@@ -171,161 +326,6 @@ Rectangle = class Rectangle {
     }
 }
 
-var selectionsModule = (function () {
-    Array.prototype.remove = function (from, to) {
-        var rest = this.slice((to || from) + 1 || this.length);
-        this.length = from < 0 ? this.length + from : from;
-        return this.push.apply(this, rest);
-    };
-
-    /**
-     *
-     * @type {Map<string, Array<Rectangle>>}
-     */
-    let selectionsMap = new Map();
-
-    /**
-     * Handle click events for selections.
-     * @param {MouseEvent} event - The mouse event object.
-     */
-    function onClickFunction(event) {
-        const cursorX = event.pageX; //get cursorX relative to whole page.
-        const cursorY = event.pageY; //get cursorY relative to whole page.
-
-        let imagePos = Point.getPositionRelativeToDocument(event.target)
-        let zoomLevel = zoomModule.getZoomLevel();
-        const imageCoordsRelativeToSelf = new Point((cursorX - imagePos.left) / zoomLevel, (cursorY - imagePos.top) / zoomLevel)
-
-        if (imageCoordsRelativeToSelf.x < 0) {
-            imageCoordsRelativeToSelf.x = 0
-        }
-
-        if (imageCoordsRelativeToSelf.y < 0) {
-            imageCoordsRelativeToSelf.y = 0
-        }
-
-        let name = String(event.target.id);
-        let pageKey = name.split("-")[1];
-        let spawnDiv = `selection-${pageKey}`
-
-        let present = selectionsMap.has(pageKey)
-        if (!present) {
-            selectionsMap.set(pageKey, [])
-        }
-
-        let recArr = selectionsMap.get(pageKey);
-        if (recArr.length <= 0) {
-            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
-            rec.p1 = imageCoordsRelativeToSelf;
-            recArr.push(rec)
-            rec.spawnP1()
-            return
-        }
-
-        let recData = recArr[recArr.length - 1];
-        if (recData.p2 === undefined) {
-            recData.p2 = imageCoordsRelativeToSelf;
-            recData.spawnP2()
-            recData.clearSpawnedPoints();
-            recData.spawnRectangle()
-        } else {
-            let rec = new Rectangle(document.getElementById(spawnDiv), event.target);
-            rec.p1 = imageCoordsRelativeToSelf;
-            recArr.push(rec)
-            rec.spawnP1()
-        }
-    }
-
-    /**
-     * @param pageKey {string}
-     * @param rec {Rectangle}
-     */
-    function pushSelectionToMap(pageKey, rec) {
-        let present = selectionsMap.has(pageKey)
-        if (!present) {
-            selectionsMap.set(pageKey, [])
-        }
-
-        let recArr = selectionsMap.get(pageKey);
-        recArr.push(rec);
-    }
-
-    /**
-     * Spawns a rectangle on an image.
-     * @param pageKey {string}
-     * @param p1 {Point}
-     * @param p2 {Point}
-     * @param id {string} The ID of the rectangle
-     */
-    function loadRectangle(pageKey, p1, p2, id = undefined) {
-        let spawnDiv = document.getElementById(`selection-${pageKey}`);
-        let imageDiv = document.getElementById(`image-${pageKey}`);
-
-        let rec = new Rectangle(spawnDiv, imageDiv, p1, p2, id, true);
-        pushSelectionToMap(pageKey, rec);
-        rec.spawnRectangle();
-    }
-
-    async function deleteSelection(key, id) {
-        let rectangles = selectionsMap.get(key);
-
-        for (let i = 0; i < rectangles.length; i++) {
-            let rec = rectangles[i];
-            if (rec.id !== id) {
-                continue;
-            }
-
-            if (rec.isExternal) {
-                let name = String(rec.spawnDiv);
-                let pageKey = name.split("-")[1];
-                debugger;
-                let done = await apiModule.deleteSelectionsFromDatabase(pageKey, rec.id)
-                if (!done) {
-                    console.log("An error occurred while deleting your selection");
-                    return
-                }
-                notificationsModule.create("Success", "Your changes have been saved")
-            }
-
-            rec.clearSpawnedNodes()
-            rectangles.remove(i)
-        }
-    }
-
-    function deleteAllSelections() {
-        selectionsModule.map.forEach(pageArr => {
-            pageArr.forEach(rec => {
-                rec.clearSpawnedNodes()
-            })
-        })
-
-        selectionsMap = new Map();
-    }
-
-    /**
-     * Redraw selection nodes.
-     */
-    function redrawSelectionNodes() {
-        if (selectionsMap.size <= 0) {
-            return
-        }
-
-        selectionsMap.forEach((recArr, i) => {
-            recArr.forEach((rec, j) => {
-                rec.clearSpawnedNodes();
-                rec.spawnRectangle()
-            })
-        })
-    }
-
-    return {
-        map: selectionsMap,
-        load: loadRectangle,
-        onClick: onClickFunction,
-        deleteSelection: deleteSelection,
-        refreshSelectionNodes: redrawSelectionNodes,
-    };
-})()
 
 window.addEventListener("resize", () => {
     try {

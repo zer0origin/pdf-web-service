@@ -5,24 +5,26 @@ SelectionDTO = class SelectionDTO {
      */
     coordinates
     pageKey
+    id
 
-    constructor(uuid, bounds, key) {
+    constructor(uuid, bounds, key, selectionUUID = null) {
         this.documentUUID = uuid
         this.coordinates = bounds
         this.pageKey = key
+        this.id = selectionUUID
     }
 }
 
-var apiModule = (function () {
+let apiModule = (function () {
     /**
      * @param data {Map<string, Array<Rectangle>>}
-     * @param includeExternal Should selections from an external source be included in the DTO array?
+     * @param onlyExternal Should selections from an external source be included in the DTO array?
      * @returns {SelectionDTO[]}
      */
-    function convertSelectionMapToDTO(data, includeExternal = false) {
+    function convertSelectionMapToDTO(data, onlyExternal = false) {
         let mapDTO = []
         data.forEach((pageRectangleArray, key) => {
-            pageRectangleArray.filter(value => value.isExternal === includeExternal).forEach((rectangle) => {
+            pageRectangleArray.filter(value => value.isExternal === onlyExternal).forEach((rectangle) => {
                 p1 = rectangle.p1
                 p2 = rectangle.p2
 
@@ -33,7 +35,7 @@ var apiModule = (function () {
                 let name = String(rectangle.imageDiv.id);
                 let key = name.split("-")[1];
 
-                let selectionDTO = new SelectionDTO(getDocumentId(), {X1: p1.x, Y1: p1.y, X2: p2.x, Y2: p2.y}, key)
+                let selectionDTO = new SelectionDTO(getDocumentId(), {X1: p1.x, Y1: p1.y, X2: p2.x, Y2: p2.y}, key, rectangle.id)
                 mapDTO.push(selectionDTO)
             })
         })
@@ -82,6 +84,7 @@ var apiModule = (function () {
     }
 
     let cooldown = false;
+
     async function saveToAPI() {
         const data = selectionsModule.map;
         const dataToTransfer = convertSelectionMapToDTO(data);
@@ -124,6 +127,17 @@ var apiModule = (function () {
     }
 
     /**
+     *
+     * @param req {{DocumentUid: String, Uids: Array<String>}}
+     */
+    async function sendBasicExtractRequest(req){
+        let url = `/extract/basic`
+        return await fetch(url, {
+            method: "POST", cache: "default", body: JSON.stringify(req)
+        })
+    }
+
+    /**
      * @returns {string}
      */
     function getDocumentId() {
@@ -131,10 +145,10 @@ var apiModule = (function () {
     }
 
     return {
-        getDocumentId: getDocumentId,
-        convertSelectionMapToDTO: convertSelectionMapToDTO,
-        deleteSelectionsFromDatabase: deleteSelectionsFromDatabase,
+        deleteSelection: deleteSelectionsFromDatabase,
         load: loadFromAPI,
-        save: saveToAPI
+        save: saveToAPI,
+        convertSelectionMapToDTO: convertSelectionMapToDTO,
+        sendBasicExtractRequest: sendBasicExtractRequest,
     }
-})()
+})();

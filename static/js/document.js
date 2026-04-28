@@ -63,11 +63,17 @@ let documentModule = (function () {
             notificationsModule.createError("Error", "Something unexpected has happened!");
         }
 
+        /**
+         * @returns {string}
+         */
+        function getDocumentId() {
+            return document.getElementById("viewer").attributes["documentId"].nodeValue;
+        }
+
         return {
             deleteDocument: deleteDocument,
             uploadDocument: uploadDocument,
-            completePromiseThenCallback: completePromiseThenCallback
+            completePromiseThenCallback: completePromiseThenCallback,
         }
     }
-
 )()

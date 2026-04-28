@@ -256,11 +256,34 @@ func (t Api) GetSelectionListString(c *gin.Context) (string, error) {
 	return string(bytes), nil
 }
 
-// DeleteSelection Proxies request through to API server. - TODO: Add permission checks.
+// DeleteSelection Proxies request through to API server. - TODO: Add permission checks, in other words, ensure that the user deleting the document has the same ownerUid.
 func (t Api) DeleteSelection(c *gin.Context) error {
 	queryStr := c.Request.URL.RawQuery
 	url := fmt.Sprintf("%s/api/v1/selections?%s", t.BaseUrl, queryStr)
 	method := "DELETE"
+
+	req, err := http.NewRequest(method, url, c.Request.Body)
+	if err != nil {
+		return err
+	}
+	req.Header = c.Request.Header
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code returned by api: %d", res.StatusCode)
+	}
+
+	return nil
+}
+
+func (t Api) ExtractSelection(c *gin.Context, ownerUID string) error {
+	url := fmt.Sprintf("%s/api/v1/extract/basic?OwnerUid=%s", t.BaseUrl, ownerUID)
+	method := "POST"
 
 	req, err := http.NewRequest(method, url, c.Request.Body)
 	if err != nil {

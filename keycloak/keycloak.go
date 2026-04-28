@@ -68,3 +68,15 @@ func (t Api) ParseTokenUnverified(token string) (jwt.Token, error) {
 
 	return *unverified, nil
 }
+
+func (t Api) GetOwnerUidFromToken(token string) (string, error) {
+	parsedToken, _ := t.ParseTokenUnverified(token)
+	ownerUid, err := parsedToken.Claims.GetSubject()
+
+	if err != nil {
+		err := fmt.Errorf("failed to retreive OwnerUUID: %w", err)
+		return "", err
+	}
+
+	return ownerUid, nil
+}
