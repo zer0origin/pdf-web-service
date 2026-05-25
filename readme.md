@@ -20,7 +20,7 @@ KEYCLOAK_CLIENT=service-api
 KEYCLOAK_CLIENT_SECRET=gtQLem8EJgxr537nbQlJh3Npd6Li6s0K
 KEYCLOAK_REALM_NAME=pdf
 
-For deployment, ensure that you have changed the keycloak client secret and updated it in the enviroment variables.
+For deployment, ensure that you have changed the keycloak client secret and updated it in the environment variables.
 
 ```
 Client (Browser)
