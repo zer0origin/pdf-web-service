@@ -12,6 +12,14 @@
 ## Architecture
 The `pdf-web-service` acts as the frontend layer of the PDF platform. It delegates processing and data operations to internal services, ensuring a clear separation between presentation, business logic, and data management.
 
+## Running Locally
+To run the service locally for testing, there are a few required environment variables (I have included their default values):
+JESR_API_BASEURL=http://localhost:8082
+KEYCLOAK_BASEURL=http://localhost:8081
+KEYCLOAK_CLIENT=service-api
+KEYCLOAK_CLIENT_SECRET=gtQLem8EJgxr537nbQlJh3Npd6Li6s0K
+KEYCLOAK_REALM_NAME=pdf
+
 ```
 Client (Browser)
 │
