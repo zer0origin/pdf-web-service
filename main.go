@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	handleEmptyJesr := func(str string) { panic("Jesr Api Url must be present.") }
+	handleEmptyJesr := func(str string) { panic("JESR_API_BASEURL cannot be empty.") }
 	mustNotBeEmpty(handleEmptyJesr, models.JESR_API_BASEURL)
 	jesrApi := jesr.Api{BaseUrl: models.JESR_API_BASEURL}
 
