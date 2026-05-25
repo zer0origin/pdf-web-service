@@ -17,10 +17,10 @@ services:
         condition: service_healthy
 
   data:
-    image: pdf_service_data:v0.2.5
+    image: pdf_service_data:v0.2.6-beta
     container_name: pdf_service_data
     environment:
-      DOCUMENT_DPI: 120
+      DOCUMENT_DPI: 72
     ports:
       - "8083:8080"
 

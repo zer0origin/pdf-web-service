@@ -281,25 +281,27 @@ func (t Api) DeleteSelection(c *gin.Context) error {
 	return nil
 }
 
-func (t Api) ExtractSelection(c *gin.Context, ownerUID string) error {
+func (t Api) ExtractSelection(c *gin.Context, ownerUID string) (string, error) {
 	url := fmt.Sprintf("%s/api/v1/extract/basic?OwnerUid=%s", t.BaseUrl, ownerUID)
 	method := "POST"
 
 	req, err := http.NewRequest(method, url, c.Request.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 	req.Header = c.Request.Header
 
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code returned by api: %d", res.StatusCode)
+		return "", fmt.Errorf("unexpected status code returned by api: %d", res.StatusCode)
 	}
 
-	return nil
+	bytes, err := io.ReadAll(res.Body)
+
+	return string(bytes), err
 }

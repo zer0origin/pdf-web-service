@@ -15,7 +15,7 @@ SelectionDTO = class SelectionDTO {
     }
 }
 
-let apiModule = (function () {
+var apiModule = (function () {
     /**
      * @param data {Map<string, Array<Rectangle>>}
      * @param onlyExternal Should selections from an external source be included in the DTO array?
@@ -132,9 +132,19 @@ let apiModule = (function () {
      */
     async function sendBasicExtractRequest(req){
         let url = `/extract/basic`
-        return await fetch(url, {
+
+
+        let res = await fetch(url, {
             method: "POST", cache: "default", body: JSON.stringify(req)
         })
+
+        if (!res.ok){
+            notificationsModule.createError("Failed to save extraction response.")
+            console.log("Unexpected error code returned from JESR API");
+            return;
+        }
+
+        return await res.json();
     }
 
     /**

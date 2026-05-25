@@ -378,12 +378,13 @@ func (t GinUser) BasicExtraction(c *gin.Context) {
 		return
 	}
 
-	err = t.JesrApi.ExtractSelection(c, subject)
+	res, err := t.JesrApi.ExtractSelection(c, subject)
 	if err != nil {
 		fmt.Println(err)
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	c.Status(http.StatusOK)
+	fmt.Println(res)
+	c.JSON(http.StatusOK, res)
 }

@@ -1,4 +1,4 @@
-let documentModule = (function () {
+var documentModule = (function () {
         function deleteDocument(documentUUID) {
             return fetch(`/user/documents/${documentUUID}`, {
                 credentials: "same-origin", method: "DELETE", headers: {
