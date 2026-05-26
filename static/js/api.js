@@ -35,7 +35,12 @@ var apiModule = (function () {
                 let name = String(rectangle.imageDiv.id);
                 let key = name.split("-")[1];
 
-                let selectionDTO = new SelectionDTO(getDocumentId(), {X1: p1.x, Y1: p1.y, X2: p2.x, Y2: p2.y}, key, rectangle.id)
+                let selectionDTO = new SelectionDTO(getDocumentId(), {
+                    X1: p1.x,
+                    Y1: p1.y,
+                    X2: p2.x,
+                    Y2: p2.y
+                }, key, rectangle.id)
                 mapDTO.push(selectionDTO)
             })
         })
@@ -130,21 +135,25 @@ var apiModule = (function () {
      *
      * @param req {{DocumentUid: String, Uids: Array<String>}}
      */
-    async function sendBasicExtractRequest(req){
+    async function sendBasicExtractRequest(req) {
         let url = `/extract/basic`
 
 
-        let res = await fetch(url, {
-            method: "POST", cache: "default", body: JSON.stringify(req)
-        })
+        try {
+            let res = await fetch(url, {
+                method: "POST", cache: "default", body: JSON.stringify(req)
+            })
 
-        if (!res.ok){
-            notificationsModule.createError("Failed to save extraction response.")
-            console.log("Unexpected error code returned from JESR API");
-            return;
+            if (!res.ok) {
+                notificationsModule.createError("Failed to save extraction response.")
+                console.log("Unexpected error code returned from JESR API");
+                return;
+            }
+
+            return await res.json();
+        } catch (error) {
+            console.error(error.message);
         }
-
-        return await res.json();
     }
 
     /**
