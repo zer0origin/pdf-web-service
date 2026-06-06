@@ -128,7 +128,6 @@ var selectionsModule = (function () {
             if (rec.isExternal) {
                 let name = String(rec.spawnDiv);
                 let pageKey = name.split("-")[1];
-                debugger;
                 let done = await apiModule.deleteSelection(pageKey, rec.id)
                 if (!done) {
                     console.log("An error occurred while deleting your selection");

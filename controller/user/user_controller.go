@@ -355,36 +355,3 @@ func (t GinUser) BroadcastNotification(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
-
-func (t GinUser) BasicExtraction(c *gin.Context) {
-	cookie, err := c.Request.Cookie(keycloak.AccessTokenKey)
-	if err != nil {
-		fmt.Println(err)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
-	token, err := t.KeycloakApi.ParseTokenUnverified(cookie.Value)
-	if err != nil {
-		fmt.Println(err)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
-	subject, err := token.Claims.GetSubject()
-	if err != nil {
-		fmt.Println(err)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
-	res, err := t.JesrApi.ExtractSelection(c, subject)
-	if err != nil {
-		fmt.Println(err)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println(res)
-	c.JSON(http.StatusOK, res)
-}

@@ -76,7 +76,12 @@ func main() {
 	router.GET("/user/events", middleware.RequireAuthenticated, userController.ToastNotifications)
 	router.POST("/user/events/broadcast", userController.BroadcastNotification)
 	router.DELETE("/user/documents/:uid", middleware.RequireAuthenticated, userController.DeleteDocument)
-	router.POST("/extract/basic", middleware.RequireAuthenticated, userController.BasicExtraction)
+
+	extractionController := &controller.GinExtraction{
+		KeycloakApi: keycloakAPI,
+		JesrApi:     jesrApi,
+	}
+	router.POST("/extract/basic", middleware.RequireAuthenticated, extractionController.BasicExtraction)
 
 	viewerController := &viewer.GinViewer{
 		KeycloakApi: keycloakAPI,

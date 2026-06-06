@@ -20,7 +20,7 @@ var ExtractModule = (function () {
     }
 
     return {
-        basic: basic
+        basic: basic,
     }
 })();
 

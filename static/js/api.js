@@ -74,6 +74,7 @@ var apiModule = (function () {
                 let selectionData = JSON.parse(data);
                 selectionData.selections.map(t => selectionsModule.load(t.pageKey, new Point(t.coordinates.x1, t.coordinates.y1), new Point(t.coordinates.x2, t.coordinates.y2), t.selectionUUID))
                 resolve(selectionData)
+                refreshExtractionForm()
             }).catch(reason => reject(reason))
         })
     }
@@ -85,6 +86,11 @@ var apiModule = (function () {
         })
 
         let res = await promise;
+
+        if (res.ok){
+            refreshExtractionForm()
+        }
+
         return res.ok;
     }
 
@@ -124,6 +130,7 @@ var apiModule = (function () {
             })
 
             notificationsModule.create("Saved", "Your changes have been saved");
+            refreshExtractionForm()
             cooldown = true;
             setTimeout(() => {
                 cooldown = false;
@@ -131,29 +138,8 @@ var apiModule = (function () {
         }
     }
 
-    /**
-     *
-     * @param req {{DocumentUid: String, Uids: Array<String>}}
-     */
-    async function sendBasicExtractRequest(req) {
-        let url = `/extract/basic`
-
-
-        try {
-            let res = await fetch(url, {
-                method: "POST", cache: "default", body: JSON.stringify(req)
-            })
-
-            if (!res.ok) {
-                notificationsModule.createError("Failed to save extraction response.")
-                console.log("Unexpected error code returned from JESR API");
-                return;
-            }
-
-            return await res.json();
-        } catch (error) {
-            console.error(error.message);
-        }
+    function refreshExtractionForm(){
+        document.getElementById("extract-button-id-json").value = JSON.stringify(getSelectionDTO())
     }
 
     /**
@@ -163,11 +149,15 @@ var apiModule = (function () {
         return document.getElementById("viewer").attributes["documentId"].nodeValue;
     }
 
+    function getSelectionDTO(){ //TODO: This is so messy!!!
+        let selections = apiModule.convertSelectionMapToDTO(selectionsModule.map, true)
+        return selections.map(e => e.id);
+    }
+
     return {
         deleteSelection: deleteSelectionsFromDatabase,
         load: loadFromAPI,
         save: saveToAPI,
         convertSelectionMapToDTO: convertSelectionMapToDTO,
-        sendBasicExtractRequest: sendBasicExtractRequest,
     }
 })();

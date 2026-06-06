@@ -13,7 +13,13 @@
             </div>
             <div class="d-flex flex-row">
                 <button class="btn btn-sm align-self-start" onclick="apiModule.save()">Save</button>
-                <button class="btn btn-sm align-self-start" onclick="ExtractModule.basic()">Extract</button>
+
+                <form hx-post="/extract/basic" hx-swap="none" hx-trigger="submit" hx-ext="json-enc">
+                    <input name="documentUid" type="text" value="{{.DocumentUid}}" hidden="hidden">
+                    <input id="extract-button-id-json" type="text" name="uids" hidden="hidden">
+                    <button type="submit" class="btn btn-sm align-self-start" onclick="">Extract</button>
+                </form>
+
                 <button class="btn btn-sm align-self-start">Reload</button>
                 <button class="btn btn-sm align-self-start">Clear</button>
             </div>
@@ -22,7 +28,8 @@
                 <div hx-trigger="load" hx-get="/viewer/images/{{.DocumentUid}}?limit=5&offset=0"></div>
             </div>
         </div>
-
+        <div id="table-contents" hidden="hidden"></div>
+        
         <template id="point-template">
             <div class="point position-absolute rounded-circle" style="background-color: #F8C8DC"></div>
         </template>
@@ -40,5 +47,6 @@
         <script src="/js/api.js"></script>
         <script src="/js/selections.js"></script>
         <script src="/js/extract.js"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
     </div>
 {{end}}

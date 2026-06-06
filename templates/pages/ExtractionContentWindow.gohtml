@@ -1,6 +1,34 @@
 {{block "extractionContent" . }}
-    <div>
-        <table>
+    <div id="table-contents" class="bg-white fixed-bottom d-flex justify-content-center p- overflow-auto w-100 h-25" hx-swap-oob="outerHTML">
+        <table class="table table-striped table-hover">
+            <thead class="table-light sticky-top">
+            <tr>
+                <th>Index / Selection UUID</th>
+                <th>y-coordinate</th>
+                <th>Text Items</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {{range $index, $element := .}}
+                {{range $subIndex, $subElement := $element}}
+                    <tr>
+                        <!-- Outer loop index shown in the first column -->
+                        <td class="w-25">{{$index}}</td>
+
+                        <!-- Inner loop data cells -->
+                        <td class="w-25">{{$subIndex}}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                            {{range $textIndex, $textElement := $subElement}}
+                                <a>{{$textElement.Text}}</a>
+                            {{end}}
+                            </div>
+                        </td>
+                    </tr>
+                {{end}}
+            {{end}}
+            </tbody>
         </table>
     </div>
 {{end}}
