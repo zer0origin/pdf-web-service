@@ -17,7 +17,7 @@ services:
         condition: service_healthy
 
   data:
-    image: pdf_service_data:v0.2.7-beta
+    image: pdf_service_data:v0.2.8-beta
     container_name: pdf_service_data
     environment:
       DOCUMENT_DPI: 120
