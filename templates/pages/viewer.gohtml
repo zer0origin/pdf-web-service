@@ -29,16 +29,16 @@
             </div>
         </div>
         <div id="table-contents" hidden="hidden"></div>
-        
+
         <template id="point-template">
             <div class="point position-absolute rounded-circle" style="background-color: #F8C8DC"></div>
         </template>
 
         <template id="rectangle-template">
-            <div class="rectangle position-absolute border border-1 d-flex flex-column justify-content-end">
-                <div class="selection-controls text-start position-absolute d-flex" style="top: -3px; left: 1px;">
+            <div class="rectangle position-absolute border border-1 d-flex flex-column justify-content-between">
+                <div class="selection-controls text-start position-absolute d-flex w-100 justify-content-between" style="font-size: 10px; top: -3px; left: 1px; color: #000000">
                     <span class="exit-controls text-start btn p-0"
-                          style="font-size: 10px; color: rgba(0,0,0,0.5);">X</span>
+                          style="font-size: 10px;">X</span>
                 </div>
             </div>
         </template>
@@ -47,6 +47,6 @@
         <script src="/js/api.js"></script>
         <script src="/js/selections.js"></script>
         <script src="/js/extract.js"></script>
-        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+        <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
     </div>
 {{end}}
