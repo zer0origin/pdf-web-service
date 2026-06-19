@@ -13,5 +13,6 @@
     <orderEntry type="library" name="htmx-ext-sse" level="application" />
     <orderEntry type="library" name="htmx.org" level="application" />
     <orderEntry type="library" name="bootstrap" level="application" />
+    <orderEntry type="library" name="htmx-ext-json-enc" level="application" />
   </component>
 </module>
