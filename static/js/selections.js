@@ -131,6 +131,7 @@ var selectionsModule = (function () {
                 let done = await apiModule.deleteSelection(pageKey, rec.id)
                 if (!done) {
                     console.log("An error occurred while deleting your selection");
+                    notificationsModule.createError("Error", "Your changes could not be saved!")
                     return
                 }
                 notificationsModule.create("Success", "Your changes have been saved")
