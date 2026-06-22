@@ -23,6 +23,7 @@ func (t GinMiddleware) getAccessTokenUsingRefreshToken(c *gin.Context) (string, 
 		return "", keycloak.InvalidToken
 	}
 
+	//FIXME: `http: named cookie not present`
 	fmt.Println("Refreshed token")
 	c.SetCookie("accessToken", token.AccessToken, token.AccessExpiresIn, "/", "", false, false)
 	c.SetCookie("refreshToken", token.RefreshToken, token.RefreshExpiresIn, "/", "", false, false)
